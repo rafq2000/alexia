@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeudaZero | Asistente Legal</title>
+    
+    <!-- Firebase SDKs - Sin el atributo 'defer' -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+
+    <style>
+        :root {
+            --primary: #1a4f8a;
+            --secondary: #45b69c;
+            --accent: #2c73d2;
+            --background: #f0f9ff;
+            --error: #dc3545;
+            --success: #28a745;
+            --warning: #ffc107;
+            --dark: #333;
+            --light: #f8f9fa;
+            --border: #dee2e6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background: var(--background);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            width: 150px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logout-btn {
+            padding: 10px 20px;
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background-color: var(--primary);
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 800px;
+            margin: 20px auto;
+            width: 100%;
+            padding: 0 20px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            overflow-y: auto;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            min-height: 400px;
+            max-height: calc(100vh - 250px);
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 20px;
+            max-width: 70%;
+            word-wrap: break-word;
+            position: relative;
+            animation: fadeIn 0.3s ease;
+            white-space: pre-wrap;
+        }
+
+        .user-message {
+            background-color: var(--accent);
+            color: white;
+            align-self: flex-end;
+            margin-left: auto;
+        }
+
+        .bot-message {
+            background-color: #f1f0f0;
+            color: #333;
+            align-self: flex-start;
+            margin-right: auto;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 10px;
+            position: sticky;
+            bottom: 0;
+            background: var(--background);
+            padding: 10px 0;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid var(--border);
+            border-radius: 20px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s ease;
+            resize: none;
+            min-height: 54px;
+            max-height: 150px;
+        }
+
+        .chat-input:focus {
+            border-color: var(--accent);
+        }
+
+        .send-btn {
+            padding: 15px 30px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            height: 54px;
+        }
+
+        .send-btn:hover {
+            background-color: var(--dark);
+            transform: translateY(-1px);
+        }
+
+        .send-btn:disabled {
+            background-color: var(--border);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            margin: 10px 0;
+        }
+
+        #loadingSpinner {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            color: var(--accent);
+        }
+
+        .error-message {
+            color: var(--error);
+            background: #fff5f5;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            display: none;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 10px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <!-- Spinner de Carga -->
+    <div id="loadingSpinner">Cargando...</div>
+
+    <!-- Header -->
+    <header class="header" id="header">
+        <img src="/assets/logo.png" alt="DeudaZero Logo" class="logo">
+        <div class="user-info">
+            <span id="userName">Usuario</span>
+            <button id="logoutButton" class="logout-btn">Cerrar sesión</button>
+        </div>
+    </header>
+
+    <!-- Contenedor Principal del Chat - Importante: display:none -->
+    <div class="chat-container" id="content" style="display: none;">
+        <!-- Contenedor de Mensajes -->
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot-message">
+                ¡Hola! Soy tu asistente legal especializado en insolvencia y deudas. Para poder ayudarte mejor, ¿te gustaría que te haga algunas preguntas sobre tu situación financiera? Esto me permitirá brindarte una asesoría más precisa según la Ley 20720.
+
+Puedes responder "Sí" si deseas que te guíe con las preguntas, o simplemente hazme tu consulta directamente si prefieres.
+            </div>
+        </div>
+        
+        <!-- Contenedor para Mostrar Errores -->
+        <div id="errorMessage" class="error-message"></div>
+
+        <!-- Contenedor de Entrada -->
+        <div class="input-container">
+            <input 
+                type="text" 
+                id="userInput" 
+                class="chat-input" 
+                placeholder="Escribe tu respuesta aquí..."
+                maxlength="500"
+            >
+            <button id="sendButton" class="send-btn" disabled>Enviar</button>
+        </div>
+    </div>
+
+    <script>
+        // Configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyD242Qba3E-UgeA1UPXp9PgmjJK_Xg6VKY",
+            authDomain: "deudazero-b8e33.firebaseapp.com",
+            projectId: "deudazero-b8e33",
+            storageBucket: "deudazero-b8e33.firebasestorage.app",
+            messagingSenderId: "763390302400",
+            appId: "1:763390302400:web:6d9f294001f9af5731b525",
+            measurementId: "G-V3G1V2LBLL"
+        };
+        // Inicializar Firebase antes de cualquier otra cosa
+        let auth;
+        try {
+            firebase.initializeApp(firebaseConfig);
+            auth = firebase.auth();
+            console.log("Firebase inicializado correctamente");
+        } catch (error) {
+            console.error("Error al inicializar Firebase:", error);
+        }
+
+        // Funciones auxiliares
+        function showError(message) {
+            console.error("Error:", message);
+            const errorDiv = document.getElementById('errorMessage');
+            if (errorDiv) {
+                errorDiv.textContent = message;
+                errorDiv.style.display = 'block';
+                setTimeout(() => errorDiv.style.display = 'none', 5000);
+            }
+        }
+
+        function showContent() {
+            console.log("Mostrando contenido...");
+            document.getElementById('loadingSpinner').style.display = 'none';
+            document.getElementById('content').style.display = 'flex';
+        }
+
+        function hideContent() {
+            console.log("Ocultando contenido...");
+            document.getElementById('content').style.display = 'none';
+            document.getElementById('loadingSpinner').style.display = 'block';
+        }
+
+        // Verificar estado de autenticación
+        auth.onAuthStateChanged((user) => {
+            console.log("Estado de autenticación:", user ? "Autenticado" : "No autenticado");
+            if (user && (user.emailVerified || user.providerData[0].providerId === 'google.com')) {
+                console.log("Usuario:", user.email);
+                document.getElementById('userName').textContent = user.displayName || user.email;
+                showContent();
+            } else {
+                console.log("No autenticado, redirigiendo...");
+                window.location.replace('/');
+            }
+        });
+
+        // Lógica principal del chat
+        document.addEventListener('DOMContentLoaded', () => {
+            const userInput = document.getElementById('userInput');
+            const sendButton = document.getElementById('sendButton');
+            const chatMessages = document.getElementById('chatMessages');
+            const logoutButton = document.getElementById('logoutButton');
+            
+            let isProcessing = false;
+
+            // Función para enviar mensajes
+            async function sendMessage() {
+                if (isProcessing) return;
+
+                const message = userInput.value.trim();
+                if (message === "") return;
+
+                isProcessing = true;
+                sendButton.disabled = true;
+                userInput.disabled = true;
+
+                appendMessage(message, 'user-message');
+                userInput.value = "";
+                const loadingDiv = showLoading();
+
+                try {
+                    const user = auth.currentUser;
+                    if (!user) throw new Error("Usuario no autenticado");
+
+                    console.log("Obteniendo token...");
+                    const idToken = await user.getIdToken();
+                    console.log("Token obtenido correctamente");
+
+                    const response = await fetch('/chatWithAI', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${idToken}`
+                        },
+                        body: JSON.stringify({ 
+                            message,
+                            model: "gpt-4",
+                            temperature: 0.7,
+                            max_tokens: 500
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || `Error HTTP: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    
+                    if (data.response) {
+                        removeLoading(loadingDiv);
+                        appendMessage(data.response, 'bot-message');
+                    } else {
+                        throw new Error('Respuesta vacía del servidor');
+                    }
+                } catch (error) {
+                    console.error("Error en sendMessage:", error);
+                    removeLoading(loadingDiv);
+                    appendMessage('Lo siento, hubo un error al procesar tu consulta.', 'bot-message');
+                    showError(error.message);
+                } finally {
+                    isProcessing = false;
+                    sendButton.disabled = false;
+                    userInput.disabled = false;
+                    userInput.focus();
+                }
+            }
+
+            // Funciones auxiliares del chat
+            function appendMessage(text, className) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${className}`;
+                messageDiv.textContent = text;
+                chatMessages.appendChild(messageDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            function showLoading() {
+                const loadingDiv = document.createElement('div');
+                loadingDiv.className = 'message bot-message loading';
+                loadingDiv.textContent = 'Pensando...';
+                chatMessages.appendChild(loadingDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                return loadingDiv;
+            }
+
+            function removeLoading(loadingDiv) {
+                if (loadingDiv && loadingDiv.parentNode === chatMessages) {
+                    chatMessages.removeChild(loadingDiv);
+                }
+            }
+
+            // Event Listeners
+            sendButton.addEventListener('click', sendMessage);
+
+            userInput.addEventListener('keypress', (event) => {
+                if (event.key === 'Enter' && !event.shiftKey) {
+                    event.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            userInput.addEventListener('input', function() {
+                sendButton.disabled = this.value.trim() === '';
+            });
+
+            // Manejo del logout
+            logoutButton.addEventListener('click', async () => {
+                try {
+                    hideContent();
+                    await auth.signOut();
+                    console.log("Sesión cerrada exitosamente");
+                    window.location.replace('/');
+                } catch (error) {
+                    console.error("Error al cerrar sesión:", error);
+                    showContent();
+                    showError("Error al cerrar sesión. Por favor, intenta de nuevo.");
+                }
+            });
+        });
+    </script>
+</body>
+</html>

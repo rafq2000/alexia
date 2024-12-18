@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeudaZero | Iniciar Sesión</title>
+    
+    <!-- Firebase SDKs - Sin 'defer' -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+
+    <style>
+        /* El CSS se mantiene igual */
+        :root {
+            --primary: #1a4f8a;
+            --secondary: #45b69c;
+            --accent: #2c73d2;
+            --background: #f0f9ff;
+            --error: #dc3545;
+            --success: #28a745;
+            --warning: #ffc107;
+            --dark: #333;
+            --light: #f8f9fa;
+            --border: #dee2e6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: var(--background);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .auth-container {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .logo-container {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .logo {
+            width: 220px;
+            height: auto;
+            margin-bottom: 1rem;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+        }
+
+        .subtitle {
+            color: var(--dark);
+            font-size: 0.95rem;
+            margin-bottom: 2rem;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 1rem;
+            text-align: center;
+            color: var(--dark);
+            cursor: pointer;
+            background: none;
+            border: none;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--primary);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+            font-weight: 500;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(44,115,210,0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 0.875rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent);
+            transform: translateY(-1px);
+        }
+
+        .btn-google {
+            background: white;
+            border: 1px solid var(--border);
+            color: var(--dark);
+        }
+
+        .btn-google:hover {
+            background: var(--light);
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 1.5rem 0;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .divider span {
+            padding: 0 1rem;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .form-footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        .form-footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .form-footer a:hover {
+            text-decoration: underline;
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .alert-error {
+            background: #fff5f5;
+            color: var(--error);
+            border: 1px solid var(--error);
+        }
+
+        .alert-success {
+            background: #f0fff4;
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .password-requirements {
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .password-requirements div {
+            margin-bottom: 0.25rem;
+        }
+
+        @media (max-width: 480px) {
+            .auth-container {
+                padding: 1.5rem;
+            }
+
+            .logo {
+                width: 180px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <!-- Logo y título -->
+        <div class="logo-container">
+            <img src="/assets/logo.png" alt="DeudaZero Logo" class="logo">
+            <p class="subtitle">Tu asistente legal especializado en insolvencia y deudas</p>
+        </div>
+
+        <!-- Alertas -->
+        <div id="alertError" class="alert alert-error"></div>
+        <div id="alertSuccess" class="alert alert-success"></div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('login')" id="loginTab">Iniciar Sesión</button>
+            <button class="tab" onclick="switchTab('register')" id="registerTab">Registrarse</button>
+        </div>
+
+        <!-- Formulario de Login -->
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="loginEmail">Correo electrónico</label>
+                <input type="email" id="loginEmail" class="form-control" required placeholder="tucorreo@ejemplo.com">
+            </div>
+            <div class="form-group">
+                <label for="loginPassword">Contraseña</label>
+                <input type="password" id="loginPassword" class="form-control" required placeholder="Tu contraseña">
+            </div>
+            <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
+            
+            <div class="form-footer">
+                <a href="#" onclick="showResetPassword()">¿Olvidaste tu contraseña?</a>
+            </div>
+
+            <div class="divider">
+                <span>o continúa con</span>
+            </div>
+
+            <button type="button" class="btn btn-google" onclick="signInWithGoogle()">
+                <img src="/assets/google-icon.png" width="20" height="20" alt="Google">
+                Continuar con Google
+            </button>
+        </form>
+
+        <!-- Formulario de Registro -->
+        <form id="registerForm" style="display: none;">
+            <div class="form-group">
+                <label for="registerName">Nombre completo</label>
+                <input type="text" id="registerName" class="form-control" required placeholder="Tu nombre completo">
+            </div>
+            <div class="form-group">
+                <label for="registerEmail">Correo electrónico</label>
+                <input type="email" id="registerEmail" class="form-control" required placeholder="tucorreo@ejemplo.com">
+            </div>
+            <div class="form-group">
+                <label for="registerPassword">Contraseña</label>
+                <input type="password" id="registerPassword" class="form-control" required 
+                       placeholder="Mínimo 8 caracteres" pattern=".{8,}">
+                <div id="passwordRequirements" class="password-requirements">
+                    <div id="lengthReq">• Mínimo 8 caracteres</div>
+                    <div id="upperReq">• Una mayúscula</div>
+                    <div id="lowerReq">• Una minúscula</div>
+                    <div id="numberReq">• Un número</div>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Crear Cuenta</button>
+
+            <div class="divider">
+                <span>o continúa con</span>
+            </div>
+
+            <button type="button" class="btn btn-google" onclick="signInWithGoogle()">
+                <img src="/assets/google-icon.png" width="20" height="20" alt="Google">
+                Registrarse con Google
+            </button>
+        </form>
+
+        <!-- Formulario de Recuperación de Contraseña -->
+        <form id="resetForm" style="display: none;">
+            <div class="form-group">
+                <label for="resetEmail">Correo electrónico</label>
+                <input type="email" id="resetEmail" class="form-control" required placeholder="tucorreo@ejemplo.com">
+            </div>
+            <button type="submit" class="btn btn-primary">Enviar correo de recuperación</button>
+            <div class="form-footer">
+                <a href="#" onclick="switchTab('login')">Volver al inicio de sesión</a>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyD242Qba3E-UgeA1UPXp9PgmjJK_Xg6VKY",
+            authDomain: "deudazero-b8e33.firebaseapp.com",
+            projectId: "deudazero-b8e33",
+            storageBucket: "deudazero-b8e33.firebasestorage.app",
+            messagingSenderId: "763390302400",
+            appId: "1:763390302400:web:6d9f294001f9af5731b525",
+            measurementId: "G-V3G1V2LBLL"
+        };
+
+        // Inicializar Firebase inmediatamente
+        let auth;
+        try {
+            firebase.initializeApp(firebaseConfig);
+            auth = firebase.auth();
+            console.log("Firebase inicializado correctamente");
+        } catch (error) {
+            console.error("Error al inicializar Firebase:", error);
+            showError("Error al inicializar la aplicación");
+        }
+
+        // Redireccionar si ya está autenticado
+        auth.onAuthStateChanged((user) => {
+            if (user && (user.emailVerified || user.providerData[0].providerId === 'google.com')) {
+                console.log("Usuario ya autenticado:", user.email);
+                window.location.replace('menu.html'); // Redirigir a menu.html
+            }
+        });
+
+        // Funciones de utilidad
+        function showError(message) {
+            const alert = document.getElementById('alertError');
+            alert.textContent = message;
+            alert.style.display = 'block';
+            console.error(message);
+            setTimeout(() => alert.style.display = 'none', 5000);
+        }
+
+        function showSuccess(message) {
+            const alert = document.getElementById('alertSuccess');
+            alert.textContent = message;
+            alert.style.display = 'block';
+            console.log(message);
+            setTimeout(() => alert.style.display = 'none', 5000);
+        }
+
+        function switchTab(tab) {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('resetForm').style.display = 'none';
+
+            document.getElementById(tab + 'Form').style.display = 'block';
+
+            document.getElementById('loginTab').classList.toggle('active', tab === 'login');
+            document.getElementById('registerTab').classList.toggle('active', tab === 'register');
+
+            document.getElementById('alertError').style.display = 'none';
+            document.getElementById('alertSuccess').style.display = 'none';
+        }
+
+        function validatePassword(password) {
+            const requirements = {
+                length: password.length >= 8,
+                upper: /[A-Z]/.test(password),
+                lower: /[a-z]/.test(password),
+                number: /[0-9]/.test(password)
+            };
+
+            document.getElementById('lengthReq').style.color = requirements.length ? 'green' : 'red';
+            document.getElementById('upperReq').style.color = requirements.upper ? 'green' : 'red';
+            document.getElementById('lowerReq').style.color = requirements.lower ? 'green' : 'red';
+            document.getElementById('numberReq').style.color = requirements.number ? 'green' : 'red';
+
+            return Object.values(requirements).every(req => req);
+        }
+
+        function handleAuthError(error) {
+            const errorMessages = {
+                'auth/weak-password': 'La contraseña es muy débil',
+                'auth/email-already-in-use': 'Este email ya está registrado',
+                'auth/invalid-email': 'Email inválido',
+                'auth/user-not-found': 'Usuario no encontrado',
+                'auth/wrong-password': 'Contraseña incorrecta',
+                'auth/too-many-requests': 'Demasiados intentos. Intenta más tarde',
+                'auth/popup-closed-by-user': 'Ventana cerrada antes de completar el proceso',
+                'auth/unauthorized-domain': 'Dominio no autorizado',
+                'auth/configuration-not-found': 'Error de configuración de OAuth',
+                'auth/operation-not-allowed': 'Autenticación con Google no habilitada',
+                'auth/network-request-failed': 'Error de conexión. Verifica tu internet'
+            };
+
+            showError(errorMessages[error.code] || error.message);
+        }
+
+        function showResetPassword() {
+            switchTab('reset');
+        }
+
+        // Login con Google
+        window.signInWithGoogle = async function() {
+            if (!auth) {
+                showError("Firebase no está disponible");
+                return;
+            }
+            try {
+                const provider = new firebase.auth.GoogleAuthProvider();
+                provider.addScope('profile');
+                provider.addScope('email');
+                
+                await auth.signInWithPopup(provider);
+                console.log("Usuario autenticado con Google");
+                window.location.replace('menu.html');  // Redirigir a menu.html
+            } catch (error) {
+                console.error("Error en autenticación con Google:", error);
+                handleAuthError(error);
+            }
+        };
+
+        // Event Listeners para formularios
+        document.addEventListener('DOMContentLoaded', () => {
+            // Login form
+            const loginForm = document.getElementById('loginForm');
+            loginForm?.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                try {
+                    const email = document.getElementById('loginEmail').value;
+                    const password = document.getElementById('loginPassword').value;
+                    const result = await auth.signInWithEmailAndPassword(email, password);
+                    
+                    if (!result.user.emailVerified) {
+                        await auth.signOut();
+                        showError("Por favor verifica tu email antes de iniciar sesión");
+                        return;
+                    }
+                    
+                    window.location.replace('menu.html'); // Redirigir a menu.html
+                } catch (error) {
+                    handleAuthError(error);
+                }
+            });
+
+            // Register form
+            const registerForm = document.getElementById('registerForm');
+            registerForm?.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const name = document.getElementById('registerName').value;
+                const email = document.getElementById('registerEmail').value;
+                const password = document.getElementById('registerPassword').value;
+
+                if (!validatePassword(password)) {
+                    showError("La contraseña no cumple con los requisitos");
+                    return;
+                }
+
+                try {
+                    const result = await auth.createUserWithEmailAndPassword(email, password);
+                    await result.user.updateProfile({ displayName: name });
+                    await result.user.sendEmailVerification();
+                    showSuccess("Cuenta creada. Por favor verifica tu email");
+                    switchTab('login');
+                } catch (error) {
+                    handleAuthError(error);
+                }
+            });
+
+            // Password validation on input
+            const registerPassword = document.getElementById('registerPassword');
+            registerPassword?.addEventListener('input', (e) => {
+                validatePassword(e.target.value);
+            });
+
+            // Reset password form
+            const resetForm = document.getElementById('resetForm');
+            resetForm?.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('resetEmail').value;
+
+                try {
+                    await auth.sendPasswordResetEmail(email);
+                    showSuccess("Se ha enviado un correo de recuperación");
+                    switchTab('login');
+                } catch (error) {
+                    handleAuthError(error);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
