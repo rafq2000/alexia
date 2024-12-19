@@ -140,30 +140,6 @@
             color: #666;
         }
 
-        .continue-btn {
-            margin-top: 30px;
-            padding: 15px 30px;
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1.1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            width: 100%;
-        }
-
-        .continue-btn:hover {
-            background-color: var(--accent);
-            transform: translateY(-2px);
-        }
-
-        .continue-btn:disabled {
-            background-color: var(--border);
-            cursor: not-allowed;
-            transform: none;
-        }
-
         @media (max-width: 600px) {
             .container {
                 padding: 20px;
@@ -273,10 +249,6 @@
                 </div>
             </label>
         </div>
-
-        <button id="continueButton" class="continue-btn" disabled onclick="continuarChat()">
-            Continuar
-        </button>
     </div>
 
     <script>
@@ -326,10 +298,9 @@
             }
         });
 
-        let selectedCategory = '';
-
         function selectOption(category) {
-            selectedCategory = category;
+            // Guardar la categoría seleccionada
+            sessionStorage.setItem('selectedCategory', category);
             
             // Remover selección previa
             document.querySelectorAll('.option-item').forEach(item => {
@@ -340,15 +311,8 @@
             const selectedItem = document.querySelector(`[value="${category}"]`).closest('.option-item');
             selectedItem.classList.add('selected');
             
-            // Habilitar botón de continuar
-            document.getElementById('continueButton').disabled = false;
-        }
-
-        function continuarChat() {
-            if (selectedCategory) {
-                sessionStorage.setItem('selectedCategory', selectedCategory);
-                window.location.replace('/chat');
-            }
+            // Redirigir al chat
+            window.location.href = '/chat';
         }
     </script>
 </body>
