@@ -6,8 +6,10 @@
     <title>DeudaZero | Asistente Legal</title>
     
     <!-- Firebase SDKs - Sin el atributo 'defer' -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <!-- Después -->
+<script src="/env-config.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
 
     <style>
         :root {
@@ -261,14 +263,13 @@ Puedes responder "Sí" si deseas que te guíe con las preguntas, o simplemente h
     <script>
         // Configuración de Firebase
         const firebaseConfig = {
-            apiKey: "AIzaSyD242Qba3E-UgeA1UPXp9PgmjJK_Xg6VKY",
-            authDomain: "deudazero-b8e33.firebaseapp.com",
-            projectId: "deudazero-b8e33",
-            storageBucket: "deudazero-b8e33.firebasestorage.app",
-            messagingSenderId: "763390302400",
-            appId: "1:763390302400:web:6d9f294001f9af5731b525",
-            measurementId: "G-V3G1V2LBLL"
-        };
+    apiKey: window.ENV.FIREBASE_API_KEY,
+    authDomain: window.ENV.FIREBASE_AUTH_DOMAIN,
+    projectId: window.ENV.FIREBASE_PROJECT_ID,
+    storageBucket: window.ENV.FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: window.ENV.FIREBASE_MESSAGING_SENDER_ID,
+    appId: window.ENV.FIREBASE_APP_ID
+};
         // Inicializar Firebase antes de cualquier otra cosa
         let auth;
         try {

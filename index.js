@@ -3,7 +3,23 @@ const cors = require('cors');
 const admin = require('firebase-admin');
 const OpenAI = require('openai');
 const path = require('path');
-require('dotenv').config();
+const dotenv = require('dotenv');
+dotenv.config();
+
+const app = express(); // Esta línea debe ir ANTES de definir rutas
+
+// Ahora sí, la ruta de env-config
+app.get('/env-config.js', (req, res) => {
+    res.set('Content-Type', 'application/javascript');
+    res.send(`window.ENV = {
+        FIREBASE_API_KEY: "${process.env.FIREBASE_API_KEY}",
+        FIREBASE_AUTH_DOMAIN: "${process.env.FIREBASE_AUTH_DOMAIN}",
+        FIREBASE_PROJECT_ID: "${process.env.FIREBASE_PROJECT_ID}",
+        FIREBASE_STORAGE_BUCKET: "${process.env.FIREBASE_STORAGE_BUCKET}",
+        FIREBASE_MESSAGING_SENDER_ID: "${process.env.FIREBASE_MESSAGING_SENDER_ID}",
+        FIREBASE_APP_ID: "${process.env.FIREBASE_APP_ID}"
+    };`);
+});
 
 // Contenido de leyes
 const lawsContent = {
