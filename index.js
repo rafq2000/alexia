@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const admin = require('firebase-admin');
-const OpenAI = require('openai'); // Nueva importación
+const OpenAI = require('openai');
 const path = require('path');
 require('dotenv').config();
 
@@ -34,8 +34,8 @@ const lawsContent = {
 };
 
 // Inicialización de Firebase Admin
-const serviceAccount = require('./firebase-service-account.json');
 try {
+    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
     admin.initializeApp({
         credential: admin.credential.cert(serviceAccount)
     });
@@ -44,7 +44,7 @@ try {
     console.error("Error al inicializar Firebase Admin:", error);
 }
 
-// Inicialización de OpenAI con la nueva sintaxis
+// Inicialización de OpenAI
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
 });
@@ -58,17 +58,16 @@ app.use(cors({
         'http://localhost:3000',
         'http://localhost:5000',
         'http://localhost',
-        'https://tu-dominio.com'
+        'https://alexia.onrender.com'
     ],
     methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
 app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Servir archivos estáticos
-app.use(express.static('public'));
-
-// Manejar rutas para SPA
+// Rutas principales
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -76,7 +75,10 @@ app.get('/', (req, res) => {
 app.get('/chat', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'chat.html'));
 });
-console.log("Middlewares configurados correctamente.");
+
+app.get('/menu', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'menu.html'));
+});
 
 // Middleware de autenticación de Firebase
 const authenticateFirebase = async (req, res, next) => {
@@ -118,12 +120,9 @@ app.post('/chatWithAI', authenticateFirebase, async (req, res) => {
             return res.status(400).json({ error: 'No message provided' });
         }
 
-        // Preparar contexto legal
         const legalContext = Object.values(lawsContent).join('\n\n');
-
         console.log('Enviando solicitud a OpenAI...');
 
-        // Crear la solicitud a OpenAI con la nueva sintaxis
         const completion = await openai.chat.completions.create({
             model: model,
             messages: [
@@ -159,25 +158,9 @@ Directrices:
     }
 });
 
-// Ruta de prueba para OpenAI
-app.get('/testOpenAI', async (req, res) => {
-    try {
-        console.log('Probando conexión con OpenAI...');
-        const completion = await openai.chat.completions.create({
-            model: 'gpt-4',
-            messages: [
-                { role: 'system', content: 'Eres un asistente útil.' },
-                { role: 'user', content: 'Hola, ChatGPT' }
-            ],
-            temperature: 0.5,
-            max_tokens: 50
-        });
-        console.log('Respuesta de OpenAI:', completion.choices[0].message.content);
-        res.json({ response: completion.choices[0].message.content });
-    } catch (error) {
-        console.error('Error al conectar con OpenAI:', error);
-        res.status(500).json({ error: error.message });
-    }
+// Ruta catch-all para el SPA
+app.get('*', (req, res) => {
+    res.redirect('/');
 });
 
 // Configuración del puerto
