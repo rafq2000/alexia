@@ -8,7 +8,21 @@ dotenv.config();
 
 const app = express();
 
-// Servir archivos estáticos primero
+// Inicialización de Firebase Admin PRIMERO
+try {
+    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+    });
+    console.log("Firebase Admin inicializado correctamente");
+} catch (error) {
+    console.error("Error al inicializar Firebase Admin:", error);
+}
+
+// Inicialización de Firestore
+const db = admin.firestore();
+
+// Servir archivos estáticos
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Configuraciones CORS
@@ -20,65 +34,7 @@ app.use(cors({
 
 app.use(express.json());
 
-// Inicialización de Firebase Admin y Firestore
-const db = admin.firestore();
-try {
-    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT || '{}');
-    if (serviceAccount.project_id) {
-        admin.initializeApp({
-            credential: admin.credential.cert(serviceAccount)
-        });
-        console.log("Firebase Admin inicializado correctamente");
-    }
-} catch (error) {
-    console.error("Error al inicializar Firebase Admin:", error);
-}
-
-// Inicialización de OpenAI
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY || ''
-});
-
-// Middleware de autenticación de admin
-const adminEmails = ['TU_EMAIL@gmail.com']; // Cambia esto por tu email
-
-const authenticateAdmin = async (req, res, next) => {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(403).json({ error: 'No autorizado' });
-    }
-
-    const token = authHeader.split('Bearer ')[1];
-    try {
-        const decodedToken = await admin.auth().verifyIdToken(token);
-        if (!adminEmails.includes(decodedToken.email)) {
-            return res.status(403).json({ error: 'No autorizado' });
-        }
-        req.user = decodedToken;
-        next();
-    } catch (error) {
-        res.status(403).json({ error: 'Token inválido' });
-    }
-};
-
-// Middleware de autenticación general
-const authenticateUser = async (req, res, next) => {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(403).json({ error: 'No autorizado' });
-    }
-
-    const token = authHeader.split('Bearer ')[1];
-    try {
-        const decodedToken = await admin.auth().verifyIdToken(token);
-        req.user = decodedToken;
-        next();
-    } catch (error) {
-        res.status(403).json({ error: 'Token inválido' });
-    }
-};
-
-// Ruta para las variables de entorno del cliente
+// Ruta para variables de entorno del cliente
 app.get('/env-config.js', (req, res) => {
     res.set('Content-Type', 'application/javascript');
     const envVars = {
@@ -92,42 +48,49 @@ app.get('/env-config.js', (req, res) => {
     res.send(`window.ENV = ${JSON.stringify(envVars)};`);
 });
 
-// Ruta para estadísticas de admin
-app.get('/admin/stats', authenticateAdmin, async (req, res) => {
-    try {
-        const statsRef = await db.collection('stats').doc('global').get();
-        const whatsappRef = await db.collection('stats').doc('whatsapp').get();
-        const usersRef = await db.collection('users').get();
-
-        res.json({
-            totalConsultas: statsRef.data()?.totalConsultas || 0,
-            consultasWhatsapp: whatsappRef.data()?.total || 0,
-            usuariosRegistrados: usersRef.size,
-            ultimaActualizacion: new Date()
-        });
-    } catch (error) {
-        console.error('Error al obtener estadísticas:', error);
-        res.status(500).json({ error: 'Error interno' });
-    }
+// Inicialización de OpenAI
+const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY
 });
+
+// Middleware de autenticación
+const authenticateUser = async (req, res, next) => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(403).json({ error: 'No autorizado' });
+        }
+
+        const token = authHeader.split('Bearer ')[1];
+        const decodedToken = await admin.auth().verifyIdToken(token);
+        req.user = decodedToken;
+        next();
+    } catch (error) {
+        console.error('Error de autenticación:', error);
+        res.status(403).json({ error: 'Token inválido' });
+    }
+};
 
 // Ruta del chat
 app.post('/chatWithAI', authenticateUser, async (req, res) => {
     try {
+        const { message, category } = req.body;
+
         // Incrementar contador de consultas
         await db.collection('stats').doc('global').set({
             totalConsultas: admin.firestore.FieldValue.increment(1),
             ultimaActualizacion: admin.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
 
-        // Registrar detalle de consulta
+        // Guardar la consulta
         await db.collection('consultas').add({
             userId: req.user.uid,
-            categoria: req.body.category,
-            mensaje: req.body.message,
+            mensaje: message,
+            categoria: category,
             fecha: admin.firestore.FieldValue.serverTimestamp()
         });
 
+        // Generar respuesta con OpenAI
         const completion = await openai.chat.completions.create({
             model: 'gpt-4',
             messages: [
@@ -135,8 +98,9 @@ app.post('/chatWithAI', authenticateUser, async (req, res) => {
                     role: 'system',
                     content: 'Eres un asistente legal especializado en leyes chilenas.'
                 },
-                { role: 'user', content: req.body.message }
+                { role: 'user', content: message }
             ],
+            temperature: 0.7,
             max_tokens: 500
         });
 
@@ -144,6 +108,18 @@ app.post('/chatWithAI', authenticateUser, async (req, res) => {
     } catch (error) {
         console.error('Error en chat:', error);
         res.status(500).json({ error: error.message });
+    }
+});
+
+// Estadísticas
+app.get('/stats', authenticateUser, async (req, res) => {
+    try {
+        const statsRef = await db.collection('stats').doc('global').get();
+        const stats = statsRef.data() || { totalConsultas: 0 };
+        res.json(stats);
+    } catch (error) {
+        console.error('Error al obtener estadísticas:', error);
+        res.status(500).json({ error: 'Error interno del servidor' });
     }
 });
 
@@ -160,8 +136,9 @@ app.get('/chat', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/chat.html'));
 });
 
-app.get('/admin', authenticateAdmin, (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/admin.html'));
+// Error 404
+app.use((req, res) => {
+    res.status(404).sendFile(path.join(__dirname, 'public/index.html'));
 });
 
 // Manejo de errores

@@ -278,7 +278,7 @@
     <script>
         let auth;
         let selectedCategory;
-
+    
         // Configuración de Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyD242Qba3E-UgeA1UPXp9PgmjJK_Xg6VKY",
@@ -288,7 +288,7 @@
             messagingSenderId: "763390302400",
             appId: "1:763390302400:web:6d9f294001f9af5731b525"
         };
-
+    
         // Inicializar Firebase
         try {
             if (!firebase.apps.length) {
@@ -299,30 +299,33 @@
         } catch (error) {
             console.error("Error al inicializar Firebase:", error);
         }
-
+    
         // Verificar autenticación
-        auth.onAuthStateChanged((user) => {
+        auth.onAuthStateChanged(async (user) => {
             if (!user) {
                 window.location.href = '/';
                 return;
             }
-
-            document.getElementById('userName').textContent = user.displayName || user.email;
+    
+            const userName = document.getElementById('userName');
+            if (userName) {
+                userName.textContent = user.displayName || user.email || 'Usuario';
+            }
+    
             selectedCategory = sessionStorage.getItem('selectedCategory');
-            
             if (!selectedCategory) {
                 window.location.href = '/menu';
                 return;
             }
-
+    
             initializeChat();
         });
-
+    
         function initializeChat() {
             const welcomeMessage = `Hola, veo que tienes consultas sobre ${getCategoryName(selectedCategory)}. ¿En qué puedo ayudarte?`;
             addMessage(welcomeMessage, 'assistant');
         }
-
+    
         function getCategoryName(category) {
             const categories = {
                 'deudas': 'problemas con deudas o bancos',
@@ -337,7 +340,7 @@
             };
             return categories[category] || 'consultas generales';
         }
-
+    
         async function sendMessage() {
             const input = document.getElementById('messageInput');
             const message = input.value.trim();
@@ -346,20 +349,21 @@
             
             input.value = '';
             addMessage(message, 'user');
-            
+    
             try {
+                const token = await auth.currentUser.getIdToken();
                 const response = await fetch('/chatWithAI', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${await auth.currentUser.getIdToken()}`
+                        'Authorization': `Bearer ${token}`
                     },
                     body: JSON.stringify({
                         message,
                         category: selectedCategory
                     })
                 });
-
+    
                 if (response.ok) {
                     const data = await response.json();
                     addMessage(data.response, 'assistant');
@@ -371,7 +375,7 @@
                 addMessage('Lo siento, ha ocurrido un error. Por favor, intenta nuevamente.', 'assistant');
             }
         }
-
+    
         function addMessage(text, sender) {
             const messagesDiv = document.getElementById('chatMessages');
             const messageDiv = document.createElement('div');
@@ -380,27 +384,36 @@
             messagesDiv.appendChild(messageDiv);
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
-
-        function redirectToWhatsApp() {
-            const phoneNumber = '+56999999999'; // Reemplaza con tu número
-            window.open(`https://wa.me/${phoneNumber}?text=Hola, necesito ayuda legal`, '_blank');
-        }
-
+    
         // Manejar logout
         document.getElementById('logoutButton').addEventListener('click', async () => {
             try {
                 await auth.signOut();
+                console.log("Sesión cerrada");
                 window.location.href = '/';
             } catch (error) {
                 console.error("Error al cerrar sesión:", error);
             }
         });
-
+    
         // Auto-expand textarea
         const messageInput = document.getElementById('messageInput');
         messageInput.addEventListener('input', function() {
             this.style.height = 'auto';
             this.style.height = (this.scrollHeight) + 'px';
+        });
+    
+        function redirectToWhatsApp() {
+            const phoneNumber = '+56999999999'; // Reemplaza con tu número
+            window.open(`https://wa.me/${phoneNumber}?text=Hola, necesito ayuda legal`, '_blank');
+        }
+    
+        // Event listener para Enter en el input
+        document.getElementById('messageInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
         });
     </script>
 </body>
