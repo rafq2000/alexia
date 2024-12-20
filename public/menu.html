@@ -57,6 +57,11 @@
             gap: 10px;
         }
 
+        .user-name {
+            color: var(--dark);
+            font-weight: 500;
+        }
+
         .logout-btn {
             padding: 10px 20px;
             background-color: var(--accent);
@@ -141,9 +146,44 @@
             color: #666;
         }
 
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            display: none;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
         @media (max-width: 600px) {
             .container {
                 padding: 20px;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
             }
 
             .option-item {
@@ -153,14 +193,23 @@
             .option-icon {
                 font-size: 1.5rem;
             }
+
+            .user-info {
+                flex-direction: column;
+                gap: 10px;
+            }
         }
     </style>
 </head>
 <body>
+    <div id="loading" class="loading">
+        <div class="loading-spinner"></div>
+    </div>
+
     <header class="header">
         <img src="/assets/logo.png" alt="DeudaZero Logo" class="logo">
         <div class="user-info">
-            <span id="userName">Usuario</span>
+            <span id="userName" class="user-name">Usuario</span>
             <button id="logoutButton" class="logout-btn">Cerrar sesión</button>
         </div>
     </header>
@@ -253,56 +302,92 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Configuración de Firebase
-            const firebaseConfig = {
-                apiKey: window.ENV.FIREBASE_API_KEY,
-                authDomain: window.ENV.FIREBASE_AUTH_DOMAIN,
-                projectId: window.ENV.FIREBASE_PROJECT_ID,
-                storageBucket: window.ENV.FIREBASE_STORAGE_BUCKET,
-                messagingSenderId: window.ENV.FIREBASE_MESSAGING_SENDER_ID,
-                appId: window.ENV.FIREBASE_APP_ID
-            };
+        let auth;
+        let initializing = true;
 
+        // Función para mostrar/ocultar el loader
+        function toggleLoading(show) {
+            document.getElementById('loading').style.display = show ? 'flex' : 'none';
+        }
+
+        // Inicializar Firebase
+        const firebaseConfig = {
+            apiKey: window.ENV?.FIREBASE_API_KEY || "AIzaSyD242Qba3E-UgeA1UPXp9PgmjJK_Xg6VKY",
+            authDomain: window.ENV?.FIREBASE_AUTH_DOMAIN || "deudazero-b8e33.firebaseapp.com",
+            projectId: window.ENV?.FIREBASE_PROJECT_ID || "deudazero-b8e33",
+            storageBucket: window.ENV?.FIREBASE_STORAGE_BUCKET || "deudazero-b8e33.firebasestorage.app",
+            messagingSenderId: window.ENV?.FIREBASE_MESSAGING_SENDER_ID || "763390302400",
+            appId: window.ENV?.FIREBASE_APP_ID || "1:763390302400:web:6d9f294001f9af5731b525"
+        };
+
+        try {
             if (!firebase.apps.length) {
                 firebase.initializeApp(firebaseConfig);
             }
-
-            const auth = firebase.auth();
-
-            auth.onAuthStateChanged((user) => {
-    if (user && (user.emailVerified || user.providerData[0].providerId === 'google.com')) {
-        document.getElementById('userName').textContent = user.displayName || user.email;
-    } else {
-        // Solo redirigir si no estamos ya en la página de inicio
-        if (window.location.pathname !== '/') {
-            window.location.replace('/');
+            auth = firebase.auth();
+            console.log("Firebase inicializado correctamente");
+        } catch (error) {
+            console.error("Error al inicializar Firebase:", error);
         }
-    }
-});
 
-            document.getElementById('logoutButton').addEventListener('click', async () => {
-                try {
-                    await auth.signOut();
+        // Verificar autenticación
+        auth.onAuthStateChanged((user) => {
+            if (initializing) {
+                initializing = false;
+                return;
+            }
+
+            if (!user) {
+                window.location.href = '/';
+                return;
+            }
+
+            if (user.emailVerified || user.providerData[0].providerId === 'google.com') {
+                document.getElementById('userName').textContent = user.displayName || user.email;
+                toggleLoading(false);
+            } else {
+                auth.signOut().then(() => {
                     window.location.href = '/';
-                } catch (error) {
-                    console.error("Error al cerrar sesión:", error);
-                }
-            });
+                });
+            }
         });
 
-        function selectOption(category) {
-            sessionStorage.setItem('selectedCategory', category);
+        // Manejar logout
+        document.getElementById('logoutButton').addEventListener('click', async () => {
+            try {
+                toggleLoading(true);
+                await auth.signOut();
+                window.location.href = '/';
+            } catch (error) {
+                console.error("Error al cerrar sesión:", error);
+                toggleLoading(false);
+            }
+        });
 
+        // Manejar selección de opción
+        function selectOption(category) {
+            toggleLoading(true);
+            
+            // Remover selección previa
             document.querySelectorAll('.option-item').forEach(item => {
                 item.classList.remove('selected');
             });
-
+            
+            // Agregar selección nueva
             const selectedItem = document.querySelector(`[value="${category}"]`).closest('.option-item');
             selectedItem.classList.add('selected');
-
+            
+            // Guardar la categoría seleccionada
+            sessionStorage.setItem('selectedCategory', category);
+            
+            // Redirigir al chat
             window.location.href = '/chat';
         }
+
+        // Mostrar loading mientras se carga la página
+        document.addEventListener('DOMContentLoaded', () => {
+            toggleLoading(true);
+        });
     </script>
 </body>
 </html>
