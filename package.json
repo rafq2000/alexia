@@ -1,7 +1,7 @@
 {
-  "name": "deudazero-backend",
+  "name": "abogadapp-backend",
   "version": "1.0.0",
-  "description": "Backend para el proyecto DeudaZero",
+  "description": "Backend para el proyecto AbogadApp",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
