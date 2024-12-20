@@ -8,6 +8,25 @@ dotenv.config();
 
 const app = express();
 
+// Validación de variables de entorno
+const requiredEnvVars = [
+    'FIREBASE_API_KEY',
+    'FIREBASE_AUTH_DOMAIN',
+    'FIREBASE_PROJECT_ID',
+    'FIREBASE_STORAGE_BUCKET',
+    'FIREBASE_MESSAGING_SENDER_ID',
+    'FIREBASE_APP_ID',
+    'FIREBASE_SERVICE_ACCOUNT',
+    'OPENAI_API_KEY'
+];
+
+requiredEnvVars.forEach((envVar) => {
+    if (!process.env[envVar]) {
+        console.error(`Error: La variable de entorno ${envVar} no está configurada.`);
+        process.exit(1);
+    }
+});
+
 // Ruta para las variables de entorno del cliente
 app.get('/env-config.js', (req, res) => {
     res.set('Content-Type', 'application/javascript');
@@ -172,6 +191,11 @@ app.get('/menu', function(req, res) {
 
 app.get('/chat', function(req, res) {
     res.sendFile(path.join(__dirname, 'public/chat.html'));
+});
+
+// Ruta para manejar errores 404
+app.use((req, res) => {
+    res.status(404).send('Página no encontrada');
 });
 
 // Configuración del puerto
