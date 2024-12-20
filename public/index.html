@@ -350,6 +350,30 @@
             showError("Error al inicializar la aplicación");
         }
 
+        // Agregar justo después de la inicialización de Firebase
+window.addEventListener('load', () => {
+    const currentPath = window.location.pathname;
+    if (currentPath === '/menu' || currentPath === '/chat') {
+        auth.onAuthStateChanged((user) => {
+            if (!user) {
+                window.location.href = '/';
+            }
+        });
+    }
+});
+
+// Agregar manejo de errores de red
+window.addEventListener('offline', () => {
+    showError('Se perdió la conexión a internet');
+});
+
+// Manejar errores no capturados
+window.onerror = function(message, source, lineno, colno, error) {
+    console.error('Error:', error);
+    showError('Ocurrió un error inesperado');
+    return false;
+};
+
         // Manejar estado de autenticación
         auth.onAuthStateChanged((user) => {
             if (initializing) {
@@ -431,25 +455,28 @@
             switchTab('reset');
         }
 
-        // Login con Google
-        window.signInWithGoogle = async function() {
-            // Login con Google
-        window.signInWithGoogle = async function() {
-            if (!auth) {
-                showError("Firebase no está disponible");
-                return;
-            }
-            try {
-                const provider = new firebase.auth.GoogleAuthProvider();
-                provider.addScope('profile');
-                provider.addScope('email');
-                
-                await auth.signInWithPopup(provider);
-            } catch (error) {
-                console.error("Error en autenticación con Google:", error);
-                handleAuthError(error);
-            }
-        };
+        // Reemplaza la función signInWithGoogle actual por esta:
+window.signInWithGoogle = async function() {
+    if (!auth) {
+        showError("Firebase no está disponible");
+        return;
+    }
+    try {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        provider.addScope('profile');
+        provider.addScope('email');
+        
+        const result = await auth.signInWithPopup(provider);
+        
+        if (result.user) {
+            console.log("Usuario autenticado con Google:", result.user.email);
+            window.location.href = '/menu';
+        }
+    } catch (error) {
+        console.error("Error en autenticación con Google:", error);
+        handleAuthError(error);
+    }
+};
 
         // Event Listeners para formularios
         document.addEventListener('DOMContentLoaded', () => {
