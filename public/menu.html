@@ -273,14 +273,15 @@
                 auth = firebase.auth();
                 console.log("Firebase inicializado correctamente");
 
-                // Verificar autenticación
-                auth.onAuthStateChanged((user) => {
-                    if (user && (user.emailVerified || user.providerData[0].providerId === 'google.com')) {
-                        document.getElementById('userName').textContent = user.displayName || user.email;
-                    } else {
-                        window.location.replace('/');
-                    }
-                });
+                // Verificar estado de autenticación
+auth.onAuthStateChanged((user) => {
+    if (user && (user.emailVerified || user.providerData[0].providerId === 'google.com')) {
+        document.getElementById('userName').textContent = user.displayName || user.email;
+        showContent();
+    } else {
+        window.location.href = '/?redirect=menu';
+    }
+});
 
                 // Manejar logout
                 document.getElementById('logoutButton').addEventListener('click', async () => {

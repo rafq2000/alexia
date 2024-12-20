@@ -162,8 +162,16 @@ Directrices:
 app.use(express.static(path.join(__dirname, 'public')));
 
 // SOLO UNA ruta catch-all al final
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+app.get('/', function(req, res) {
+    res.sendFile(path.join(__dirname, 'public/index.html'));
+});
+
+app.get('/menu', function(req, res) {
+    res.sendFile(path.join(__dirname, 'public/menu.html'));
+});
+
+app.get('/chat', function(req, res) {
+    res.sendFile(path.join(__dirname, 'public/chat.html'));
 });
 
 // Configuración del puerto

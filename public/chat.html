@@ -362,15 +362,12 @@ Puedes responder "Sí" si deseas que te guíe con las preguntas, o simplemente h
         }
 
         // Verificar estado de autenticación
-        auth.onAuthStateChanged((user) => {
-    console.log("Estado de autenticación:", user ? "Autenticado" : "No autenticado");
+auth.onAuthStateChanged((user) => {
     if (user && (user.emailVerified || user.providerData[0].providerId === 'google.com')) {
-        console.log("Usuario:", user.email);
         document.getElementById('userName').textContent = user.displayName || user.email;
         showContent();
     } else {
-        console.log("No autenticado, redirigiendo...");
-        window.location.href = '/';  // Cambiado de replace a href
+        window.location.href = '/?redirect=chat';
     }
 });
 
