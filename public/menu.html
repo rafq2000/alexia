@@ -302,105 +302,82 @@
     </div>
 
     <script>
-        // Al inicio del script
-// En menu.html, en la sección del script
-let auth;
-let initializing = true;
+        let auth;
+        let initializing = true;
 
-// Configuración de Firebase
-const firebaseConfig = {
-    apiKey: "AIzaSyD242Qba3E-UgeA1UPXp9PgmjJK_Xg6VKY",
-    authDomain: "deudazero-b8e33.firebaseapp.com",
-    projectId: "deudazero-b8e33",
-    storageBucket: "deudazero-b8e33.firebasestorage.app",
-    messagingSenderId: "763390302400",
-    appId: "1:763390302400:web:6d9f294001f9af5731b525"
-};
+        const firebaseConfig = {
+            apiKey: "AIzaSyD242Qba3E-UgeA1UPXp9PgmjJK_Xg6VKY",
+            authDomain: "deudazero-b8e33.firebaseapp.com",
+            projectId: "deudazero-b8e33",
+            storageBucket: "deudazero-b8e33.firebasestorage.app",
+            messagingSenderId: "763390302400",
+            appId: "1:763390302400:web:6d9f294001f9af5731b525"
+        };
 
-// Inicializar Firebase
-try {
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
-    auth = firebase.auth();
-    console.log("Firebase inicializado correctamente");
-} catch (error) {
-    console.error("Error al inicializar Firebase:", error);
-}
-
-// Verificar autenticación
-auth.onAuthStateChanged((user) => {
-    if (!user) {
-        window.location.href = '/';
-        return;
-    }
-
-    const userName = document.getElementById('userName');
-    if (userName) {
-        userName.textContent = user.displayName || user.email || 'Usuario';
-    }
-    toggleLoading(false);
-});
-
-// Función para el loader
-function toggleLoading(show) {
-    const loader = document.getElementById('loading');
-    if (loader) {
-        loader.style.display = show ? 'flex' : 'none';
-    }
-}
-
-// Función para seleccionar opción
-function selectOption(category) {
-    toggleLoading(true);
-    try {
-        sessionStorage.setItem('selectedCategory', category);
-        window.location.href = '/chat';
-    } catch (error) {
-        console.error('Error al navegar:', error);
-        toggleLoading(false);
-    }
-}
-
-// Manejar logout
-document.getElementById('logoutButton').addEventListener('click', async () => {
-    toggleLoading(true);
-    try {
-        await auth.signOut();
-        window.location.href = '/';
-    } catch (error) {
-        console.error("Error al cerrar sesión:", error);
-        toggleLoading(false);
-    }
-});
-
-// Manejar selección de opción
-// En menu.html, modifica la función selectOption
-function selectOption(category) {
-    document.querySelectorAll('.option-item').forEach(item => {
-        item.classList.remove('selected');
-    });
-    
-    // Encuentra y marca la opción seleccionada
-    const selectedItem = document.querySelector(`[value="${category}"]`).closest('.option-item');
-    selectedItem.classList.add('selected');
-    
-    // Guarda la categoría y redirige
-    try {
-        sessionStorage.setItem('selectedCategory', category);
-        setTimeout(() => {
-            window.location.replace('/chat');
-        }, 300); // Pequeño delay para mostrar la selección
-    } catch (error) {
-        console.error('Error al redireccionar:', error);
-    }
-}            
-                       
-            // Redirigir al chat
-            window.location.href = '/chat';
+        // Inicializar Firebase
+        try {
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
+            auth = firebase.auth();
+            console.log("Firebase inicializado correctamente");
+        } catch (error) {
+            console.error("Error al inicializar Firebase:", error);
         }
 
-        // Mostrar loading mientras se carga la página
+        // Verificar autenticación
+        auth.onAuthStateChanged((user) => {
+            if (!user) {
+                window.location.href = '/';
+                return;
+            }
+
+            const userName = document.getElementById('userName');
+            if (userName) {
+                userName.textContent = user.displayName || user.email || 'Usuario';
+            }
+            toggleLoading(false);
+        });
+
+        function toggleLoading(show) {
+            const loader = document.getElementById('loading');
+            if (loader) {
+                loader.style.display = show ? 'flex' : 'none';
+            }
+        }
+
+        function selectOption(category) {
+            console.log('Seleccionando categoría:', category);
+            
+            document.querySelectorAll('.option-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            const selectedItem = document.querySelector(`[value="${category}"]`).closest('.option-item');
+            if (selectedItem) {
+                selectedItem.classList.add('selected');
+                
+                try {
+                    sessionStorage.setItem('selectedCategory', category);
+                    window.location.href = '/chat';
+                } catch (error) {
+                    console.error('Error al redireccionar:', error);
+                    toggleLoading(false);
+                }
+            }
+        }
+
+        document.getElementById('logoutButton').addEventListener('click', async () => {
+            toggleLoading(true);
+            try {
+                await auth.signOut();
+                window.location.href = '/';
+            } catch (error) {
+                console.error("Error al cerrar sesión:", error);
+                toggleLoading(false);
+            }
+        });
+
         document.addEventListener('DOMContentLoaded', () => {
             toggleLoading(true);
         });
