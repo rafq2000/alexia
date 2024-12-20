@@ -72,7 +72,7 @@ const authenticateUser = async (req, res, next) => {
 };
 
 // Ruta del chat
-app.post('/chatWithAI', authenticateUser, async (req, res) => {
+app.post('/api/chatWithAI', authenticateUser, async (req, res) => {
     try {
         const { message, category } = req.body;
 
