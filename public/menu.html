@@ -302,71 +302,71 @@
     </div>
 
     <script>
-        let auth;
-        let initializing = true;
+        // Al inicio del script
+let auth;
+let initializing = true;
 
-        // Función para mostrar/ocultar el loader
-        function toggleLoading(show) {
-            document.getElementById('loading').style.display = show ? 'flex' : 'none';
-        }
+// Configuración de Firebase
+const firebaseConfig = {
+    apiKey: "AIzaSyD242Qba3E-UgeA1UPXp9PgmjJK_Xg6VKY",
+    authDomain: "deudazero-b8e33.firebaseapp.com",
+    projectId: "deudazero-b8e33",
+    storageBucket: "deudazero-b8e33.firebasestorage.app",
+    messagingSenderId: "763390302400",
+    appId: "1:763390302400:web:6d9f294001f9af5731b525"
+};
 
-        // Inicializar Firebase
-        const firebaseConfig = {
-            apiKey: window.ENV?.FIREBASE_API_KEY || "AIzaSyD242Qba3E-UgeA1UPXp9PgmjJK_Xg6VKY",
-            authDomain: window.ENV?.FIREBASE_AUTH_DOMAIN || "deudazero-b8e33.firebaseapp.com",
-            projectId: window.ENV?.FIREBASE_PROJECT_ID || "deudazero-b8e33",
-            storageBucket: window.ENV?.FIREBASE_STORAGE_BUCKET || "deudazero-b8e33.firebasestorage.app",
-            messagingSenderId: window.ENV?.FIREBASE_MESSAGING_SENDER_ID || "763390302400",
-            appId: window.ENV?.FIREBASE_APP_ID || "1:763390302400:web:6d9f294001f9af5731b525"
-        };
+// Inicializar Firebase
+try {
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    auth = firebase.auth();
+    console.log("Firebase inicializado correctamente");
+} catch (error) {
+    console.error("Error al inicializar Firebase:", error);
+}
 
-        try {
-            if (!firebase.apps.length) {
-                firebase.initializeApp(firebaseConfig);
-            }
-            auth = firebase.auth();
-            console.log("Firebase inicializado correctamente");
-        } catch (error) {
-            console.error("Error al inicializar Firebase:", error);
-        }
+// Función para mostrar/ocultar el loader
+function toggleLoading(show) {
+    document.getElementById('loading').style.display = show ? 'flex' : 'none';
+}
 
-        // Verificar autenticación
-        auth.onAuthStateChanged((user) => {
-            if (initializing) {
-                initializing = false;
-                return;
-            }
+// Verificar autenticación inmediatamente
+auth.onAuthStateChanged((user) => {
+    if (initializing) {
+        initializing = false;
+        toggleLoading(false);
+        return;
+    }
 
-            if (!user) {
-                window.location.href = '/';
-                return;
-            }
+    if (!user) {
+        window.location.href = '/';
+        return;
+    }
 
-            if (user.emailVerified || user.providerData[0].providerId === 'google.com') {
-                document.getElementById('userName').textContent = user.displayName || user.email;
-                toggleLoading(false);
-            } else {
-                auth.signOut().then(() => {
-                    window.location.href = '/';
-                });
-            }
-        });
+    document.getElementById('userName').textContent = user.displayName || user.email;
+    toggleLoading(false);
+});
 
-        // Manejar logout
-        document.getElementById('logoutButton').addEventListener('click', async () => {
-            try {
-                toggleLoading(true);
-                await auth.signOut();
-                window.location.href = '/';
-            } catch (error) {
-                console.error("Error al cerrar sesión:", error);
-                toggleLoading(false);
-            }
-        });
+// Manejar logout
+document.getElementById('logoutButton').addEventListener('click', async () => {
+    try {
+        toggleLoading(true);
+        await auth.signOut();
+        window.location.href = '/';
+    } catch (error) {
+        console.error("Error al cerrar sesión:", error);
+        toggleLoading(false);
+    }
+});
 
-        // Manejar selección de opción
-        function selectOption(category) {
-            toggleLoading(true);
+// Manejar selección de opción
+function selectOption(category) {
+    // No mostrar loading aquí para evitar parpadeos
+    sessionStorage.setItem('selectedCategory', category);
+    window.location.href = '/chat';
+}
             
             // Remover selección previa
             document.querySelectorAll('.option-item').forEach(item => {

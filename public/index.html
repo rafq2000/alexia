@@ -350,7 +350,7 @@
             showError("Error al inicializar la aplicación");
         }
 
-        // Agregar justo después de la inicialización de Firebase
+        /// Agregar justo después de la inicialización de Firebase
 window.addEventListener('load', () => {
     const currentPath = window.location.pathname;
     if (currentPath === '/menu' || currentPath === '/chat') {
@@ -373,6 +373,7 @@ window.onerror = function(message, source, lineno, colno, error) {
     showError('Ocurrió un error inesperado');
     return false;
 };
+
 
         // Manejar estado de autenticación
         auth.onAuthStateChanged((user) => {
