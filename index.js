@@ -81,7 +81,7 @@ const openai = new OpenAI({
 });
 console.log("OpenAI inicializado correctamente.");
 
-// Rutas principales
+// // Rutas principales
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -92,6 +92,11 @@ app.get('/chat', (req, res) => {
 
 app.get('/menu', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'menu.html'));
+});
+
+// No redireccionar todas las rutas a /, en su lugar servir index.html
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Middleware de autenticación de Firebase
