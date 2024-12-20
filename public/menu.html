@@ -362,24 +362,27 @@ document.getElementById('logoutButton').addEventListener('click', async () => {
 });
 
 // Manejar selección de opción
+// En menu.html, modifica la función selectOption
 function selectOption(category) {
-    // No mostrar loading aquí para evitar parpadeos
-    sessionStorage.setItem('selectedCategory', category);
-    window.location.href = '/chat';
-}
-            
-            // Remover selección previa
-            document.querySelectorAll('.option-item').forEach(item => {
-                item.classList.remove('selected');
-            });
-            
-            // Agregar selección nueva
-            const selectedItem = document.querySelector(`[value="${category}"]`).closest('.option-item');
-            selectedItem.classList.add('selected');
-            
-            // Guardar la categoría seleccionada
-            sessionStorage.setItem('selectedCategory', category);
-            
+    document.querySelectorAll('.option-item').forEach(item => {
+        item.classList.remove('selected');
+    });
+    
+    // Encuentra y marca la opción seleccionada
+    const selectedItem = document.querySelector(`[value="${category}"]`).closest('.option-item');
+    selectedItem.classList.add('selected');
+    
+    // Guarda la categoría y redirige
+    try {
+        sessionStorage.setItem('selectedCategory', category);
+        setTimeout(() => {
+            window.location.replace('/chat');
+        }, 300); // Pequeño delay para mostrar la selección
+    } catch (error) {
+        console.error('Error al redireccionar:', error);
+    }
+}            
+                       
             // Redirigir al chat
             window.location.href = '/chat';
         }
