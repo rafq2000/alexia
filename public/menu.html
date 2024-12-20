@@ -209,7 +209,7 @@
     <header class="header">
         <img src="/assets/logo.png" alt="DeudaZero Logo" class="logo">
         <div class="user-info">
-            <span id="userName" class="user-name">Usuario</span>
+            <span id="userName" class="user-name">Cargando...</span>
             <button id="logoutButton" class="logout-btn">Cerrar sesión</button>
         </div>
     </header>
@@ -303,6 +303,7 @@
 
     <script>
         // Al inicio del script
+// En menu.html, en la sección del script
 let auth;
 let initializing = true;
 
@@ -327,32 +328,44 @@ try {
     console.error("Error al inicializar Firebase:", error);
 }
 
-// Función para mostrar/ocultar el loader
-function toggleLoading(show) {
-    document.getElementById('loading').style.display = show ? 'flex' : 'none';
-}
-
-// Verificar autenticación inmediatamente
+// Verificar autenticación
 auth.onAuthStateChanged((user) => {
-    if (initializing) {
-        initializing = false;
-        toggleLoading(false);
-        return;
-    }
-
     if (!user) {
         window.location.href = '/';
         return;
     }
 
-    document.getElementById('userName').textContent = user.displayName || user.email;
+    const userName = document.getElementById('userName');
+    if (userName) {
+        userName.textContent = user.displayName || user.email || 'Usuario';
+    }
     toggleLoading(false);
 });
 
+// Función para el loader
+function toggleLoading(show) {
+    const loader = document.getElementById('loading');
+    if (loader) {
+        loader.style.display = show ? 'flex' : 'none';
+    }
+}
+
+// Función para seleccionar opción
+function selectOption(category) {
+    toggleLoading(true);
+    try {
+        sessionStorage.setItem('selectedCategory', category);
+        window.location.href = '/chat';
+    } catch (error) {
+        console.error('Error al navegar:', error);
+        toggleLoading(false);
+    }
+}
+
 // Manejar logout
 document.getElementById('logoutButton').addEventListener('click', async () => {
+    toggleLoading(true);
     try {
-        toggleLoading(true);
         await auth.signOut();
         window.location.href = '/';
     } catch (error) {

@@ -85,17 +85,22 @@ app.post('/api/chatWithAI', async (req, res) => {
     }
 });
 
-// Rutas principales
-const sendIndexHtml = (req, res) => {
+// Rutas principales - al inicio del archivo después de las configuraciones
+app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/index.html'));
-};
+});
 
-app.get('/', sendIndexHtml);
 app.get('/menu', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/menu.html'));
 });
+
 app.get('/chat', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/chat.html'));
+});
+
+// Ruta catch-all para 404
+app.use((req, res) => {
+    res.status(404).redirect('/');
 });
 
 // Manejo de errores
