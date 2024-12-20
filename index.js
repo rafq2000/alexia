@@ -6,9 +6,9 @@ const path = require('path');
 const dotenv = require('dotenv');
 dotenv.config();
 
-const app = express(); // Esta línea debe ir ANTES de definir rutas
+const app = express();
 
-// Ahora sí, la ruta de env-config
+// Ruta para las variables de entorno del cliente
 app.get('/env-config.js', (req, res) => {
     res.set('Content-Type', 'application/javascript');
     res.send(`window.ENV = {
@@ -20,6 +20,23 @@ app.get('/env-config.js', (req, res) => {
         FIREBASE_APP_ID: "${process.env.FIREBASE_APP_ID}"
     };`);
 });
+
+// Configuraciones y middleware
+app.use(cors({
+    origin: [
+        'http://localhost:3000',
+        'http://localhost:5000',
+        'http://localhost',
+        'https://alexia.onrender.com'
+    ],
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
+
+// El resto de tu código de index.js sigue igual...
 
 // Contenido de leyes
 const lawsContent = {
