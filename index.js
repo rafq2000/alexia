@@ -66,7 +66,6 @@ const openai = new OpenAI({
 });
 console.log("OpenAI inicializado correctamente.");
 
-const app = express();
 
 // Middlewares
 app.use(cors({
