@@ -9,6 +9,7 @@
     <script src="/env-config.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
 
     <style>
         :root {
@@ -18,42 +19,11 @@
             --background: #f0f9ff;
             --error: #dc3545;
             --success: #28a745;
-            --warning: #ffc107;
             --dark: #333;
             --light: #f8f9fa;
             --border: #dee2e6;
         }
 
-        /* Estilos de WhatsApp - debe ir justo después de :root */
-.whatsapp-btn {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background-color: #25D366;
-    color: white;
-    border-radius: 50%;
-    width: 60px;
-    height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 2px 2px 6px rgba(0,0,0,0.4);
-    cursor: pointer;
-    transition: all 0.3s ease;
-    z-index: 9999;
-    text-decoration: none;
-}
-
-.whatsapp-btn:hover {
-    transform: scale(1.1);
-    background-color: #128C7E;
-}
-
-        .whatsapp-icon {
-            width: 35px;
-            height: 35px;
-            fill: currentColor;
-        }
         * {
             margin: 0;
             padding: 0;
@@ -64,8 +34,7 @@
         body {
             background: var(--background);
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
+            padding: 20px;
         }
 
         .header {
@@ -75,19 +44,24 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            margin-bottom: 30px;
+            border-radius: 10px;
         }
 
         .logo {
             width: 150px;
+            cursor: pointer;
         }
 
         .user-info {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 20px;
+        }
+
+        .user-name {
+            color: var(--dark);
+            font-weight: 500;
         }
 
         .logout-btn {
@@ -97,7 +71,7 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            transition: all 0.3s ease;
         }
 
         .logout-btn:hover {
@@ -105,400 +79,328 @@
         }
 
         .chat-container {
-            flex: 1;
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             display: flex;
             flex-direction: column;
-            max-width: 800px;
-            margin: 20px auto;
-            width: 100%;
-            padding: 0 20px;
+            height: calc(100vh - 160px);
         }
 
         .chat-messages {
             flex: 1;
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
             overflow-y: auto;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-            min-height: 400px;
-            max-height: calc(100vh - 250px);
+            padding: 20px;
         }
 
         .message {
-            margin-bottom: 15px;
-            padding: 10px 15px;
-            border-radius: 20px;
-            max-width: 70%;
-            word-wrap: break-word;
-            position: relative;
-            animation: fadeIn 0.3s ease;
-            white-space: pre-wrap;
+            margin-bottom: 20px;
+            max-width: 80%;
         }
-        .user-message {
+
+        .message.user-message {
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .message-content {
+            padding: 12px 16px;
+            border-radius: 10px;
+            display: inline-block;
+        }
+
+        .user-message .message-content {
             background-color: var(--accent);
             color: white;
-            align-self: flex-end;
-            margin-left: auto;
         }
 
-        .bot-message {
-            background-color: #f1f0f0;
-            color: #333;
-            align-self: flex-start;
-            margin-right: auto;
-        }
-
-        .input-container {
-            display: flex;
-            gap: 10px;
-            position: sticky;
-            bottom: 0;
-            background: var(--background);
-            padding: 10px 0;
+        .assistant-message .message-content {
+            background-color: var(--light);
+            color: var(--dark);
         }
 
         .chat-input {
-            flex: 1;
-            padding: 15px;
-            border: 2px solid var(--border);
-            border-radius: 20px;
-            font-size: 16px;
-            outline: none;
-            transition: border-color 0.3s ease;
-            resize: none;
-            min-height: 54px;
-            max-height: 150px;
+            padding: 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 10px;
         }
 
-        .chat-input:focus {
+        .chat-input textarea {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            resize: none;
+            font-size: 1rem;
+            height: 45px;
+            line-height: 20px;
+        }
+
+        .chat-input textarea:focus {
+            outline: none;
             border-color: var(--accent);
         }
 
         .send-btn {
-            padding: 15px 30px;
-            background-color: var(--primary);
+            padding: 0 20px;
+            background-color: var(--accent);
             color: white;
             border: none;
-            border-radius: 20px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 16px;
             transition: all 0.3s ease;
-            height: 54px;
         }
 
         .send-btn:hover {
-            background-color: var(--dark);
-            transform: translateY(-1px);
+            background-color: var(--primary);
         }
 
         .send-btn:disabled {
             background-color: var(--border);
             cursor: not-allowed;
-            transform: none;
         }
 
         .loading {
-            text-align: center;
-            color: #666;
-            font-style: italic;
-            margin: 10px 0;
-        }
-
-        /* Contador de consultas */
-        .consultation-counter {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background-color: var(--primary);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            z-index: 1000;
-        }
-        #loadingSpinner {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 24px;
-            color: var(--accent);
-        }
-
-        .error-message {
-            color: var(--error);
-            background: #fff5f5;
-            padding: 10px;
-            border-radius: 8px;
-            margin: 10px 0;
             display: none;
+            justify-content: center;
+            padding: 20px;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        .loading-dots {
+            display: flex;
+            gap: 8px;
         }
 
-        .chat-messages::-webkit-scrollbar {
+        .loading-dots span {
             width: 8px;
+            height: 8px;
+            background-color: var(--accent);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out;
         }
 
-        .chat-messages::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
+        .loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
         }
 
-        .chat-messages::-webkit-scrollbar-thumb {
-            background: var(--accent);
-            border-radius: 10px;
+        @media (max-width: 600px) {
+            .chat-container {
+                height: calc(100vh - 140px);
+            }
+
+            .header {
+                padding: 15px;
+            }
+
+            .logo {
+                width: 120px;
+            }
+
+            .user-info {
+                gap: 10px;
+            }
+
+            .message {
+                max-width: 90%;
+            }
         }
 
-        .chat-messages::-webkit-scrollbar-thumb:hover {
-            background: var(--primary);
+        .whatsapp-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1000;
+            background-color: #25D366;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .whatsapp-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+        }
+
+        .whatsapp-icon {
+            width: 35px;
+            height: 35px;
         }
     </style>
 </head>
-<!-- Justo después del <body> -->
-    <body>
-        <!-- Botón de WhatsApp -->
-        <a href="https://wa.me/56961458118" target="_blank" class="whatsapp-btn">
-            <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" fill="white" viewBox="0 0 16 16">
-                <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/>
-            </svg>
-        </a>
-
-    <!-- Contador de consultas -->
-    <div class="consultation-counter">
-        Consultas totales: <span id="consultationCount">0</span>
-    </div>
-    <!-- Spinner de Carga -->
-    <div id="loadingSpinner">Cargando...</div>
-
-    <!-- Header -->
-    <header class="header" id="header">
-        <img src="/assets/logo.png" alt="DeudaZero Logo" class="logo">
+<body>
+    <header class="header">
+        <img src="/assets/logo.png" alt="DeudaZero Logo" class="logo" onclick="window.location.href='/menu'">
         <div class="user-info">
-            <span id="userName">Usuario</span>
+            <span id="userName" class="user-name">Usuario</span>
             <button id="logoutButton" class="logout-btn">Cerrar sesión</button>
         </div>
     </header>
 
-    <!-- Contenedor Principal del Chat -->
-    <div class="chat-container" id="content" style="display: none;">
-        <!-- Contenedor de Mensajes -->
-        <div class="chat-messages" id="chatMessages">
-            <div class="message bot-message">
-                ¡Hola! Soy tu asistente legal especializado en insolvencia y deudas. Para poder ayudarte mejor, ¿te gustaría que te haga algunas preguntas sobre tu situación financiera? Esto me permitirá brindarte una asesoría más precisa según la Ley 20720.
-
-Puedes responder "Sí" si deseas que te guíe con las preguntas, o simplemente hazme tu consulta directamente si prefieres.
+    <div class="chat-container">
+        <div id="chatMessages" class="chat-messages"></div>
+        
+        <div id="loading" class="loading">
+            <div class="loading-dots">
+                <span></span>
+                <span></span>
+                <span></span>
             </div>
         </div>
-        
-        <!-- Contenedor para Mostrar Errores -->
-        <div id="errorMessage" class="error-message"></div>
 
-        <!-- Contenedor de Entrada -->
-        <div class="input-container">
-            <input 
-                type="text" 
-                id="userInput" 
-                class="chat-input" 
-                placeholder="Escribe tu respuesta aquí..."
-                maxlength="500"
-            >
-            <button id="sendButton" class="send-btn" disabled>Enviar</button>
+        <div class="chat-input">
+            <textarea 
+                id="messageInput" 
+                placeholder="Escribe tu mensaje aquí..."
+                rows="1"
+                onkeydown="if(event.keyCode == 13 && !event.shiftKey) { event.preventDefault(); sendMessage(); }">
+            </textarea>
+            <button id="sendButton" class="send-btn" onclick="sendMessage()">Enviar</button>
         </div>
     </div>
 
+    <div class="whatsapp-button" onclick="redirectToWhatsApp()">
+        <img src="/assets/whatsapp-icon.png" alt="WhatsApp" class="whatsapp-icon">
+    </div>
+
     <script>
+        let auth;
+        let selectedCategory;
+
         // Configuración de Firebase
         const firebaseConfig = {
-            apiKey: window.ENV.FIREBASE_API_KEY,
-            authDomain: window.ENV.FIREBASE_AUTH_DOMAIN,
-            projectId: window.ENV.FIREBASE_PROJECT_ID,
-            storageBucket: window.ENV.FIREBASE_STORAGE_BUCKET,
-            messagingSenderId: window.ENV.FIREBASE_MESSAGING_SENDER_ID,
-            appId: window.ENV.FIREBASE_APP_ID
+            apiKey: "AIzaSyD242Qba3E-UgeA1UPXp9PgmjJK_Xg6VKY",
+            authDomain: "deudazero-b8e33.firebaseapp.com",
+            projectId: "deudazero-b8e33",
+            storageBucket: "deudazero-b8e33.firebasestorage.app",
+            messagingSenderId: "763390302400",
+            appId: "1:763390302400:web:6d9f294001f9af5731b525"
         };
 
-        // Sistema de conteo de consultas
-        let consultationCount = parseInt(localStorage.getItem('consultationCount') || '0');
-        document.getElementById('consultationCount').textContent = consultationCount;
-
         // Inicializar Firebase
-        let auth;
         try {
-            firebase.initializeApp(firebaseConfig);
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
             auth = firebase.auth();
             console.log("Firebase inicializado correctamente");
         } catch (error) {
             console.error("Error al inicializar Firebase:", error);
         }
 
-        // Funciones auxiliares
-        function showError(message) {
-            console.error("Error:", message);
-            const errorDiv = document.getElementById('errorMessage');
-            if (errorDiv) {
-                errorDiv.textContent = message;
-                errorDiv.style.display = 'block';
-                setTimeout(() => errorDiv.style.display = 'none', 5000);
+        // Verificar autenticación
+        auth.onAuthStateChanged((user) => {
+            if (!user) {
+                window.location.href = '/';
+                return;
             }
-        }
 
-        function showContent() {
-            console.log("Mostrando contenido...");
-            document.getElementById('loadingSpinner').style.display = 'none';
-            document.getElementById('content').style.display = 'flex';
-        }
-
-        function hideContent() {
-            console.log("Ocultando contenido...");
-            document.getElementById('content').style.display = 'none';
-            document.getElementById('loadingSpinner').style.display = 'block';
-        }
-
-        // Verificar estado de autenticación
-auth.onAuthStateChanged((user) => {
-    if (user && (user.emailVerified || user.providerData[0].providerId === 'google.com')) {
-        document.getElementById('userName').textContent = user.displayName || user.email;
-        showContent();
-    } else {
-        window.location.href = '/?redirect=chat';
-    }
-});
-
-        // Lógica principal del chat
-        document.addEventListener('DOMContentLoaded', () => {
-            const userInput = document.getElementById('userInput');
-            const sendButton = document.getElementById('sendButton');
-            const chatMessages = document.getElementById('chatMessages');
-            const logoutButton = document.getElementById('logoutButton');
+            document.getElementById('userName').textContent = user.displayName || user.email;
+            selectedCategory = sessionStorage.getItem('selectedCategory');
             
-            let isProcessing = false;
+            if (!selectedCategory) {
+                window.location.href = '/menu';
+                return;
+            }
 
-            // Función para enviar mensajes
-            async function sendMessage() {
-                if (isProcessing) return;
+            initializeChat();
+        });
 
-                const message = userInput.value.trim();
-                if (message === "") return;
+        function initializeChat() {
+            const welcomeMessage = `Hola, veo que tienes consultas sobre ${getCategoryName(selectedCategory)}. ¿En qué puedo ayudarte?`;
+            addMessage(welcomeMessage, 'assistant');
+        }
 
-                // Incrementar contador
-                consultationCount++;
-                localStorage.setItem('consultationCount', consultationCount);
-                document.getElementById('consultationCount').textContent = consultationCount;
+        function getCategoryName(category) {
+            const categories = {
+                'deudas': 'problemas con deudas o bancos',
+                'familia': 'problemas familiares',
+                'laboral': 'problemas laborales',
+                'penal': 'problemas con la justicia',
+                'tributario': 'problemas con impuestos',
+                'municipal': 'problemas municipales',
+                'consumidor': 'problemas con productos o servicios',
+                'medico': 'problemas médicos',
+                'arriendo': 'problemas con arriendos'
+            };
+            return categories[category] || 'consultas generales';
+        }
 
-                isProcessing = true;
-                sendButton.disabled = true;
-                userInput.disabled = true;
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            input.value = '';
+            addMessage(message, 'user');
+            
+            try {
+                const response = await fetch('/chatWithAI', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${await auth.currentUser.getIdToken()}`
+                    },
+                    body: JSON.stringify({
+                        message,
+                        category: selectedCategory
+                    })
+                });
 
-                appendMessage(message, 'user-message');
-                userInput.value = "";
-                const loadingDiv = showLoading();
-
-                try {
-                    const user = auth.currentUser;
-                    if (!user) throw new Error("Usuario no autenticado");
-
-                    console.log("Obteniendo token...");
-                    const idToken = await user.getIdToken();
-                    console.log("Token obtenido correctamente");
-
-                    const response = await fetch('/chatWithAI', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${idToken}`
-                        },
-                        body: JSON.stringify({ 
-                            message,
-                            model: "gpt-4",
-                            temperature: 0.7,
-                            max_tokens: 500
-                        })
-                    });
-
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.error || `Error HTTP: ${response.status}`);
-                    }
-
+                if (response.ok) {
                     const data = await response.json();
-                    
-                    if (data.response) {
-                        removeLoading(loadingDiv);
-                        appendMessage(data.response, 'bot-message');
-                    } else {
-                        throw new Error('Respuesta vacía del servidor');
-                    }
-                } catch (error) {
-                    console.error("Error en sendMessage:", error);
-                    removeLoading(loadingDiv);
-                    appendMessage('Lo siento, hubo un error al procesar tu consulta.', 'bot-message');
-                    showError(error.message);
-                } finally {
-                    isProcessing = false;
-                    sendButton.disabled = false;
-                    userInput.disabled = false;
-                    userInput.focus();
+                    addMessage(data.response, 'assistant');
+                } else {
+                    throw new Error('Error en la respuesta del servidor');
                 }
+            } catch (error) {
+                console.error('Error:', error);
+                addMessage('Lo siento, ha ocurrido un error. Por favor, intenta nuevamente.', 'assistant');
             }
+        }
 
-            // Funciones auxiliares del chat
-            function appendMessage(text, className) {
-                const messageDiv = document.createElement('div');
-                messageDiv.className = `message ${className}`;
-                messageDiv.textContent = text;
-                chatMessages.appendChild(messageDiv);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
+        function addMessage(text, sender) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+            messageDiv.innerHTML = `<div class="message-content">${text}</div>`;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function redirectToWhatsApp() {
+            const phoneNumber = '+56999999999'; // Reemplaza con tu número
+            window.open(`https://wa.me/${phoneNumber}?text=Hola, necesito ayuda legal`, '_blank');
+        }
+
+        // Manejar logout
+        document.getElementById('logoutButton').addEventListener('click', async () => {
+            try {
+                await auth.signOut();
+                window.location.href = '/';
+            } catch (error) {
+                console.error("Error al cerrar sesión:", error);
             }
+        });
 
-            function showLoading() {
-                const loadingDiv = document.createElement('div');
-                loadingDiv.className = 'message bot-message loading';
-                loadingDiv.textContent = 'Pensando...';
-                chatMessages.appendChild(loadingDiv);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-                return loadingDiv;
-            }
-
-            function removeLoading(loadingDiv) {
-                if (loadingDiv && loadingDiv.parentNode === chatMessages) {
-                    chatMessages.removeChild(loadingDiv);
-                }
-            }
-
-            // Event Listeners
-            sendButton.addEventListener('click', sendMessage);
-
-            userInput.addEventListener('keypress', (event) => {
-                if (event.key === 'Enter' && !event.shiftKey) {
-                    event.preventDefault();
-                    sendMessage();
-                }
-            });
-
-            userInput.addEventListener('input', function() {
-                sendButton.disabled = this.value.trim() === '';
-            });
-
-            // Manejo del logout
-            logoutButton.addEventListener('click', async () => {
-                try {
-                    hideContent();
-                    await auth.signOut();
-                    console.log("Sesión cerrada exitosamente");
-                    window.location.replace('/');
-                } catch (error) {
-                    console.error("Error al cerrar sesión:", error);
-                    showContent();
-                    showError("Error al cerrar sesión. Por favor, intenta de nuevo.");
-                }
-            });
+        // Auto-expand textarea
+        const messageInput = document.getElementById('messageInput');
+        messageInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
         });
     </script>
 </body>

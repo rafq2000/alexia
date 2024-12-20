@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Administrativo - DeudaZero</title>
+    <!-- Firebase SDKs -->
+    <script src="/env-config.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+
+    <style>
+        /* Estilos básicos */
+        .stats-container {
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="stats-container">
+        <h1>Panel Administrativo</h1>
+        <div id="stats"></div>
+    </div>
+
+    <script>
+        let auth;
+
+        // Configuración de Firebase
+        const firebaseConfig = {
+            // Tu configuración de Firebase
+        };
+
+        // Inicializar Firebase
+        try {
+            firebase.initializeApp(firebaseConfig);
+            auth = firebase.auth();
+        } catch (error) {
+            console.error("Error:", error);
+        }
+
+        // Verificar autenticación
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                window.location.href = '/';
+                return;
+            }
+
+            try {
+                const token = await user.getIdToken();
+                const response = await fetch('/admin/stats', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const stats = await response.json();
+                    displayStats(stats);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+
+        function displayStats(stats) {
+            const container = document.getElementById('stats');
+            container.innerHTML = `
+                <div class="stat-card">
+                    <h2>Total de Consultas</h2>
+                    <p>${stats.totalConsultas}</p>
+                </div>
+                <div class="stat-card">
+                    <h2>Consultas por WhatsApp</h2>
+                    <p>${stats.consultasWhatsapp}</p>
+                </div>
+                <div class="stat-card">
+                    <h2>Usuarios Registrados</h2>
+                    <p>${stats.usuariosRegistrados}</p>
+                </div>
+                <div class="stat-card">
+                    <h2>Última Actualización</h2>
+                    <p>${new Date(stats.ultimaActualizacion).toLocaleString()}</p>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

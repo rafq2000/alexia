@@ -20,43 +20,8 @@ app.use(cors({
 
 app.use(express.json());
 
-// Middleware para verificar disponibilidad de variables de entorno
-const checkEnvVariables = () => {
-    const requiredVars = [
-        'FIREBASE_API_KEY',
-        'FIREBASE_AUTH_DOMAIN',
-        'FIREBASE_PROJECT_ID',
-        'FIREBASE_STORAGE_BUCKET',
-        'FIREBASE_MESSAGING_SENDER_ID',
-        'FIREBASE_APP_ID',
-        'FIREBASE_SERVICE_ACCOUNT',
-        'OPENAI_API_KEY'
-    ];
-
-    const missingVars = requiredVars.filter(varName => !process.env[varName]);
-    
-    if (missingVars.length > 0) {
-        console.warn('Warning: Missing environment variables:', missingVars.join(', '));
-        return false;
-    }
-    return true;
-};
-
-// Ruta para las variables de entorno del cliente
-app.get('/env-config.js', (req, res) => {
-    res.set('Content-Type', 'application/javascript');
-    const envVars = {
-        FIREBASE_API_KEY: process.env.FIREBASE_API_KEY || '',
-        FIREBASE_AUTH_DOMAIN: process.env.FIREBASE_AUTH_DOMAIN || '',
-        FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID || '',
-        FIREBASE_STORAGE_BUCKET: process.env.FIREBASE_STORAGE_BUCKET || '',
-        FIREBASE_MESSAGING_SENDER_ID: process.env.FIREBASE_MESSAGING_SENDER_ID || '',
-        FIREBASE_APP_ID: process.env.FIREBASE_APP_ID || ''
-    };
-    res.send(`window.ENV = ${JSON.stringify(envVars)};`);
-});
-
-// Inicialización de Firebase Admin
+// Inicialización de Firebase Admin y Firestore
+const db = admin.firestore();
 try {
     const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT || '{}');
     if (serviceAccount.project_id) {
@@ -74,18 +39,115 @@ const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY || ''
 });
 
-// API Routes
-app.post('/api/chatWithAI', async (req, res) => {
+// Middleware de autenticación de admin
+const adminEmails = ['TU_EMAIL@gmail.com']; // Cambia esto por tu email
+
+const authenticateAdmin = async (req, res, next) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(403).json({ error: 'No autorizado' });
+    }
+
+    const token = authHeader.split('Bearer ')[1];
     try {
-        // Aquí va tu lógica de chat
-        res.json({ success: true });
+        const decodedToken = await admin.auth().verifyIdToken(token);
+        if (!adminEmails.includes(decodedToken.email)) {
+            return res.status(403).json({ error: 'No autorizado' });
+        }
+        req.user = decodedToken;
+        next();
     } catch (error) {
-        console.error('Error en chat:', error);
-        res.status(500).json({ error: 'Error interno del servidor' });
+        res.status(403).json({ error: 'Token inválido' });
+    }
+};
+
+// Middleware de autenticación general
+const authenticateUser = async (req, res, next) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(403).json({ error: 'No autorizado' });
+    }
+
+    const token = authHeader.split('Bearer ')[1];
+    try {
+        const decodedToken = await admin.auth().verifyIdToken(token);
+        req.user = decodedToken;
+        next();
+    } catch (error) {
+        res.status(403).json({ error: 'Token inválido' });
+    }
+};
+
+// Ruta para las variables de entorno del cliente
+app.get('/env-config.js', (req, res) => {
+    res.set('Content-Type', 'application/javascript');
+    const envVars = {
+        FIREBASE_API_KEY: process.env.FIREBASE_API_KEY || '',
+        FIREBASE_AUTH_DOMAIN: process.env.FIREBASE_AUTH_DOMAIN || '',
+        FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID || '',
+        FIREBASE_STORAGE_BUCKET: process.env.FIREBASE_STORAGE_BUCKET || '',
+        FIREBASE_MESSAGING_SENDER_ID: process.env.FIREBASE_MESSAGING_SENDER_ID || '',
+        FIREBASE_APP_ID: process.env.FIREBASE_APP_ID || ''
+    };
+    res.send(`window.ENV = ${JSON.stringify(envVars)};`);
+});
+
+// Ruta para estadísticas de admin
+app.get('/admin/stats', authenticateAdmin, async (req, res) => {
+    try {
+        const statsRef = await db.collection('stats').doc('global').get();
+        const whatsappRef = await db.collection('stats').doc('whatsapp').get();
+        const usersRef = await db.collection('users').get();
+
+        res.json({
+            totalConsultas: statsRef.data()?.totalConsultas || 0,
+            consultasWhatsapp: whatsappRef.data()?.total || 0,
+            usuariosRegistrados: usersRef.size,
+            ultimaActualizacion: new Date()
+        });
+    } catch (error) {
+        console.error('Error al obtener estadísticas:', error);
+        res.status(500).json({ error: 'Error interno' });
     }
 });
 
-// Rutas principales - al inicio del archivo después de las configuraciones
+// Ruta del chat
+app.post('/chatWithAI', authenticateUser, async (req, res) => {
+    try {
+        // Incrementar contador de consultas
+        await db.collection('stats').doc('global').set({
+            totalConsultas: admin.firestore.FieldValue.increment(1),
+            ultimaActualizacion: admin.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        // Registrar detalle de consulta
+        await db.collection('consultas').add({
+            userId: req.user.uid,
+            categoria: req.body.category,
+            mensaje: req.body.message,
+            fecha: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        const completion = await openai.chat.completions.create({
+            model: 'gpt-4',
+            messages: [
+                {
+                    role: 'system',
+                    content: 'Eres un asistente legal especializado en leyes chilenas.'
+                },
+                { role: 'user', content: req.body.message }
+            ],
+            max_tokens: 500
+        });
+
+        res.json({ response: completion.choices[0].message.content });
+    } catch (error) {
+        console.error('Error en chat:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Rutas principales
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/index.html'));
 });
@@ -98,9 +160,8 @@ app.get('/chat', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/chat.html'));
 });
 
-// Ruta catch-all para 404
-app.use((req, res) => {
-    res.status(404).redirect('/');
+app.get('/admin', authenticateAdmin, (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/admin.html'));
 });
 
 // Manejo de errores
@@ -113,7 +174,6 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 3000;
 const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`Servidor corriendo en puerto ${PORT}`);
-    checkEnvVariables();
 });
 
 // Manejo de errores del servidor
