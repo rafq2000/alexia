@@ -177,19 +177,21 @@ Directrices:
     }
 });
 
-// Servir archivos estáticos DESPUÉS de las rutas de la API
-app.use(express.static(path.join(__dirname, 'public')));
-
-// SOLO UNA ruta catch-all al final
-app.get('/', function(req, res) {
-    res.sendFile(path.join(__dirname, 'public/index.html'));
+// Manejo de redirección al menú o inicio según autenticación
+app.get('/', (req, res) => {
+    const redirectToMenu = req.query.redirect === 'menu';
+    if (redirectToMenu) {
+        res.redirect('/menu');
+    } else {
+        res.sendFile(path.join(__dirname, 'public/index.html'));
+    }
 });
 
-app.get('/menu', function(req, res) {
+app.get('/menu', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/menu.html'));
 });
 
-app.get('/chat', function(req, res) {
+app.get('/chat', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/chat.html'));
 });
 

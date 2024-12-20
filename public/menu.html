@@ -274,8 +274,8 @@
                 if (user && (user.emailVerified || user.providerData[0].providerId === 'google.com')) {
                     document.getElementById('userName').textContent = user.displayName || user.email;
                 } else {
-                    if (!window.location.pathname.includes('menu')) {
-                        window.location.href = '/menu';
+                    if (!window.location.pathname.includes('index')) {
+                        window.location.href = '/';
                     }
                 }
             });
