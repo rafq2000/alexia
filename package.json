@@ -1,20 +1,22 @@
 {
   "name": "deudazero-backend",
   "version": "1.0.0",
-  "description": "Backend para DeudaZero",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
-  },
-  "engines": {
-    "node": ">=18.0.0"
+    "start": "node index.js",
+    "dev": "nodemon index.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
-    "firebase-admin": "^11.5.0",
-    "openai": "^3.2.1",
-    "path": "^0.12.7"
+    "firebase-admin": "^11.10.0",
+    "openai": "^3.2.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
