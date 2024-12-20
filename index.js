@@ -21,7 +21,7 @@ app.get('/env-config.js', (req, res) => {
     };`);
 });
 
-// Configuraciones y middleware
+// Configuraciones y middleware (SOLO UNA VEZ)
 app.use(cors({
     origin: [
         'http://localhost:3000',
@@ -35,8 +35,6 @@ app.use(cors({
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
-
-// El resto de tu código de index.js sigue igual...
 
 // Contenido de leyes
 const lawsContent = {
@@ -82,22 +80,6 @@ const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
 });
 console.log("OpenAI inicializado correctamente.");
-
-
-// Middlewares
-app.use(cors({
-    origin: [
-        'http://localhost:3000',
-        'http://localhost:5000',
-        'http://localhost',
-        'https://alexia.onrender.com'
-    ],
-    methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-}));
-
-app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
 
 // Rutas principales
 app.get('/', (req, res) => {
