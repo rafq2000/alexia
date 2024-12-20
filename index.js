@@ -21,7 +21,7 @@ app.get('/env-config.js', (req, res) => {
     };`);
 });
 
-// Configuraciones y middleware (SOLO UNA VEZ)
+// Configuraciones y middleware
 app.use(cors({
     origin: [
         'http://localhost:3000',
@@ -34,7 +34,6 @@ app.use(cors({
 }));
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
 
 // Contenido de leyes
 const lawsContent = {
@@ -80,24 +79,6 @@ const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
 });
 console.log("OpenAI inicializado correctamente.");
-
-// // Rutas principales
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-app.get('/chat', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'chat.html'));
-});
-
-app.get('/menu', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'menu.html'));
-});
-
-// No redireccionar todas las rutas a /, en su lugar servir index.html
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
 
 // Middleware de autenticación de Firebase
 const authenticateFirebase = async (req, res, next) => {
@@ -177,9 +158,12 @@ Directrices:
     }
 });
 
-// Ruta catch-all para el SPA
+// Servir archivos estáticos DESPUÉS de las rutas de la API
+app.use(express.static(path.join(__dirname, 'public')));
+
+// SOLO UNA ruta catch-all al final
 app.get('*', (req, res) => {
-    res.redirect('/');
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Configuración del puerto
