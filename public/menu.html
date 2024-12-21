@@ -1,386 +1,450 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AbogadApp | Selecciona tu Consulta</title>
-    
-    <!-- Firebase SDKs -->
-    <script src="/env-config.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AbogadApp | Selecciona tu Consulta</title>
+  
+  <!-- Firebase SDKs -->
+  <script src="/env-config.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
 
-    <style>
-        :root {
-            --primary: #1a4f8a;
-            --secondary: #45b69c;
-            --accent: #2c73d2;
-            --background: #f0f9ff;
-            --error: #dc3545;
-            --success: #28a745;
-            --dark: #333;
-            --light: #f8f9fa;
-            --border: #dee2e6;
-        }
+  <style>
+    :root {
+      --primary: #1a4f8a;
+      --secondary: #45b69c;
+      --accent: #2c73d2;
+      --background: #f0f9ff;
+      --error: #dc3545;
+      --success: #28a745;
+      --dark: #333;
+      --light: #f8f9fa;
+      --border: #dee2e6;
+    }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', system-ui, sans-serif;
-        }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
 
-        body {
-            background: var(--background);
-            min-height: 100vh;
-            padding: 20px;
-        }
+    body {
+      background: var(--background);
+      min-height: 100vh;
+      padding: 20px;
+    }
 
-        .header {
-            background-color: white;
-            padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            border-radius: 10px;
-        }
+    .header {
+      background-color: white;
+      padding: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      border-radius: 10px;
+    }
 
-        .logo {
-            width: 150px;
-        }
+    .logo {
+      width: 150px;
+    }
 
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
 
-        .user-name {
-            color: var(--dark);
-            font-weight: 500;
-        }
+    .user-name {
+      color: var(--dark);
+      font-weight: 500;
+    }
 
-        .logout-btn {
-            padding: 10px 20px;
-            background-color: var(--accent);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
+    .logout-btn {
+      padding: 10px 20px;
+      background-color: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
 
-        .logout-btn:hover {
-            background-color: var(--primary);
-        }
+    .logout-btn:hover {
+      background-color: var(--primary);
+    }
 
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 40px;
+      border-radius: 15px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
 
-        .title {
-            font-size: 1.8rem;
-            color: var(--primary);
-            margin-bottom: 30px;
-            text-align: center;
-        }
+    .title {
+      font-size: 1.8rem;
+      color: var(--primary);
+      margin-bottom: 30px;
+      text-align: center;
+    }
 
-        .options-container {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
+    .options-container {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
 
-        .option-item {
-            display: flex;
-            align-items: center;
-            padding: 15px;
-            border: 2px solid var(--border);
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
+    .option-item {
+      display: flex;
+      align-items: center;
+      padding: 15px;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
 
-        .option-item:hover {
-            border-color: var(--accent);
-            background-color: #f8f9ff;
-            transform: translateX(5px);
-        }
+    .option-item:hover {
+      border-color: var(--accent);
+      background-color: #f8f9ff;
+      transform: translateX(5px);
+    }
 
-        .option-item input[type="radio"] {
-            display: none;
-        }
+    .option-item input[type="radio"] {
+      display: none;
+    }
 
-        .option-item.selected {
-            border-color: var(--accent);
-            background-color: #f0f7ff;
-        }
+    .option-item.selected {
+      border-color: var(--accent);
+      background-color: #f0f7ff;
+    }
 
-        .option-icon {
-            font-size: 1.8rem;
-            margin-right: 15px;
-            min-width: 40px;
-            text-align: center;
-        }
+    .option-icon {
+      font-size: 1.8rem;
+      margin-right: 15px;
+      min-width: 40px;
+      text-align: center;
+    }
 
-        .option-content {
-            flex: 1;
-        }
+    .option-content {
+      flex: 1;
+    }
 
-        .option-title {
-            font-size: 1.1rem;
-            font-weight: 500;
-            color: var(--dark);
-            margin-bottom: 5px;
-        }
+    .option-title {
+      font-size: 1.1rem;
+      font-weight: 500;
+      color: var(--dark);
+      margin-bottom: 5px;
+    }
 
-        .option-description {
-            font-size: 0.9rem;
-            color: #666;
-        }
+    .option-description {
+      font-size: 0.9rem;
+      color: #666;
+    }
 
-        .loading {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.9);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            display: none;
-        }
+    /* <-- NUEVO: estilos para opciones inactivas */
+    .option-item.inactive {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none; /* para que no se mueva al hacer hover */
+    }
+    .option-item.inactive:hover {
+      border-color: var(--border);
+      background-color: white;
+      transform: none;
+    }
 
-        .loading-spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid var(--border);
-            border-top-color: var(--accent);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
+    .loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      display: none;
+    }
 
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
 
-        @media (max-width: 600px) {
-            .container {
-                padding: 20px;
-            }
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
 
-            .header {
-                flex-direction: column;
-                gap: 15px;
-                text-align: center;
-            }
+    /* <-- NUEVO: media query para pantallas pequeñas */
+    @media (max-width: 600px) {
+      .container {
+        padding: 20px;
+      }
 
-            .option-item {
-                padding: 12px;
-            }
+      .header {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+      }
 
-            .option-icon {
-                font-size: 1.5rem;
-            }
+      .option-item {
+        padding: 12px;
+      }
 
-            .user-info {
-                flex-direction: column;
-                gap: 10px;
-            }
-        }
-    </style>
+      .option-icon {
+        font-size: 1.5rem;
+      }
+
+      .user-info {
+        flex-direction: column;
+        gap: 10px;
+      }
+    }
+
+    /* <-- OPCIONAL: media query aún más pequeña */
+    @media (max-width: 400px) {
+      .option-title {
+        font-size: 1rem;
+      }
+      .option-description {
+        font-size: 0.8rem;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div id="loading" class="loading">
-        <div class="loading-spinner"></div>
+  <div id="loading" class="loading">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <header class="header">
+    <img src="/assets/logo.png" alt="DeudaZero Logo" class="logo">
+    <div class="user-info">
+      <span id="userName" class="user-name">Cargando...</span>
+      <button id="logoutButton" class="logout-btn">Cerrar sesión</button>
     </div>
+  </header>
 
-    <header class="header">
-        <img src="/assets/logo.png" alt="DeudaZero Logo" class="logo">
-        <div class="user-info">
-            <span id="userName" class="user-name">Cargando...</span>
-            <button id="logoutButton" class="logout-btn">Cerrar sesión</button>
+  <div class="container">
+    <h1 class="title">¿Qué tipo de ayuda necesitas?</h1>
+    
+    <div class="options-container">
+      <!-- ÚNICA opción activa -->
+      <label class="option-item" onclick="selectOption('deudas')">
+        <input type="radio" name="category" value="deudas">
+        <div class="option-icon">💰</div>
+        <div class="option-content">
+          <div class="option-title">Tengo problemas con deudas o bancos</div>
+          <div class="option-description">
+            Deudas bancarias, créditos, repactaciones, quiebra personal
+          </div>
         </div>
-    </header>
+      </label>
 
-    <div class="container">
-        <h1 class="title">¿Qué tipo de ayuda necesitas?</h1>
+      <!-- El resto está 'inactive' y no hace nada al click -->
+      <label class="option-item inactive" onclick="optionInDevelopment()">
+        <input type="radio" name="category" value="familia">
+        <div class="option-icon">👨‍👩‍👧‍👦</div>
+        <div class="option-content">
+          <div class="option-title">
+            Tengo un problema familiar <small>(en desarrollo)</small>
+          </div>
+          <div class="option-description">
+            Divorcios, pensión de alimentos, custodia de hijos
+          </div>
+        </div>
+      </label>
+
+      <label class="option-item inactive" onclick="optionInDevelopment()">
+        <input type="radio" name="category" value="laboral">
+        <div class="option-icon">💼</div>
+        <div class="option-content">
+          <div class="option-title">
+            Tengo problemas en mi trabajo <small>(en desarrollo)</small>
+          </div>
+          <div class="option-description">
+            Despidos, sueldos impagos, accidentes laborales
+          </div>
+        </div>
+      </label>
+
+      <label class="option-item inactive" onclick="optionInDevelopment()">
+        <input type="radio" name="category" value="penal">
+        <div class="option-icon">⚖️</div>
+        <div class="option-content">
+          <div class="option-title">
+            Tengo problemas con la justicia <small>(en desarrollo)</small>
+          </div>
+          <div class="option-description">
+            Denuncias, estafas, problemas legales
+          </div>
+        </div>
+      </label>
+
+      <label class="option-item inactive" onclick="optionInDevelopment()">
+        <input type="radio" name="category" value="tributario">
+        <div class="option-icon">📊</div>
+        <div class="option-content">
+          <div class="option-title">
+            Tengo problemas con impuestos <small>(en desarrollo)</small>
+          </div>
+          <div class="option-description">
+            SII, declaraciones, multas tributarias
+          </div>
+        </div>
+      </label>
+
+      <label class="option-item inactive" onclick="optionInDevelopment()">
+        <input type="radio" name="category" value="municipal">
+        <div class="option-icon">🏛️</div>
+        <div class="option-content">
+          <div class="option-title">
+            Tengo problemas con la municipalidad <small>(en desarrollo)</small>
+          </div>
+          <div class="option-description">
+            Multas de tránsito, patentes, permisos
+          </div>
+        </div>
+      </label>
+
+      <label class="option-item inactive" onclick="optionInDevelopment()">
+        <input type="radio" name="category" value="consumidor">
+        <div class="option-icon">🛒</div>
+        <div class="option-content">
+          <div class="option-title">
+            Tengo problemas con un producto o servicio <small>(en desarrollo)</small>
+          </div>
+          <div class="option-description">
+            Garantías, reclamos, devoluciones
+          </div>
+        </div>
+      </label>
+
+      <label class="option-item inactive" onclick="optionInDevelopment()">
+        <input type="radio" name="category" value="medico">
+        <div class="option-icon">🏥</div>
+        <div class="option-content">
+          <div class="option-title">
+            Tengo problemas médicos <small>(en desarrollo)</small>
+          </div>
+          <div class="option-description">
+            Negligencias médicas, errores hospitalarios
+          </div>
+        </div>
+      </label>
+
+      <label class="option-item inactive" onclick="optionInDevelopment()">
+        <input type="radio" name="category" value="arriendo">
+        <div class="option-icon">🏠</div>
+        <div class="option-content">
+          <div class="option-title">
+            Tengo problemas con un arriendo <small>(en desarrollo)</small>
+          </div>
+          <div class="option-description">
+            Contratos, desalojos, garantías
+          </div>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <script>
+    let auth;
+    let initializing = true;
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyD242Qba3E-UgeA1UPXp9PgmjJK_Xg6VKY",
+      authDomain: "deudazero-b8e33.firebaseapp.com",
+      projectId: "deudazero-b8e33",
+      storageBucket: "deudazero-b8e33.firebasestorage.app",
+      messagingSenderId: "763390302400",
+      appId: "1:763390302400:web:6d9f294001f9af5731b525"
+    };
+
+    // Inicializar Firebase
+    try {
+      if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+      }
+      auth = firebase.auth();
+      console.log("Firebase inicializado correctamente");
+    } catch (error) {
+      console.error("Error al inicializar Firebase:", error);
+    }
+
+    // Verificar autenticación
+    auth.onAuthStateChanged((user) => {
+      if (!user) {
+        window.location.href = '/';
+        return;
+      }
+
+      const userName = document.getElementById('userName');
+      if (userName) {
+        userName.textContent = user.displayName || user.email || 'Usuario';
+      }
+      toggleLoading(false);
+    });
+
+    function toggleLoading(show) {
+      const loader = document.getElementById('loading');
+      if (loader) {
+        loader.style.display = show ? 'flex' : 'none';
+      }
+    }
+
+    function selectOption(category) {
+      console.log('Seleccionando categoría:', category);
+      
+      document.querySelectorAll('.option-item').forEach(item => {
+        item.classList.remove('selected');
+      });
+      
+      const selectedItem = document.querySelector(`[value="${category}"]`).closest('.option-item');
+      if (selectedItem) {
+        selectedItem.classList.add('selected');
         
-        <div class="options-container">
-            <label class="option-item" onclick="selectOption('deudas')">
-                <input type="radio" name="category" value="deudas">
-                <div class="option-icon">💰</div>
-                <div class="option-content">
-                    <div class="option-title">Tengo problemas con deudas o bancos</div>
-                    <div class="option-description">Deudas bancarias, créditos, repactaciones, quiebra personal</div>
-                </div>
-            </label>
-
-            <label class="option-item" onclick="selectOption('familia')">
-                <input type="radio" name="category" value="familia">
-                <div class="option-icon">👨‍👩‍👧‍👦</div>
-                <div class="option-content">
-                    <div class="option-title">Tengo un problema familiar</div>
-                    <div class="option-description">Divorcios, pensión de alimentos, custodia de hijos</div>
-                </div>
-            </label>
-
-            <label class="option-item" onclick="selectOption('laboral')">
-                <input type="radio" name="category" value="laboral">
-                <div class="option-icon">💼</div>
-                <div class="option-content">
-                    <div class="option-title">Tengo problemas en mi trabajo</div>
-                    <div class="option-description">Despidos, sueldos impagos, accidentes laborales</div>
-                </div>
-            </label>
-
-            <label class="option-item" onclick="selectOption('penal')">
-                <input type="radio" name="category" value="penal">
-                <div class="option-icon">⚖️</div>
-                <div class="option-content">
-                    <div class="option-title">Tengo problemas con la justicia</div>
-                    <div class="option-description">Denuncias, estafas, problemas legales</div>
-                </div>
-            </label>
-
-            <label class="option-item" onclick="selectOption('tributario')">
-                <input type="radio" name="category" value="tributario">
-                <div class="option-icon">📊</div>
-                <div class="option-content">
-                    <div class="option-title">Tengo problemas con impuestos</div>
-                    <div class="option-description">SII, declaraciones, multas tributarias</div>
-                </div>
-            </label>
-
-            <label class="option-item" onclick="selectOption('municipal')">
-                <input type="radio" name="category" value="municipal">
-                <div class="option-icon">🏛️</div>
-                <div class="option-content">
-                    <div class="option-title">Tengo problemas con la municipalidad</div>
-                    <div class="option-description">Multas de tránsito, patentes, permisos</div>
-                </div>
-            </label>
-
-            <label class="option-item" onclick="selectOption('consumidor')">
-                <input type="radio" name="category" value="consumidor">
-                <div class="option-icon">🛒</div>
-                <div class="option-content">
-                    <div class="option-title">Tengo problemas con un producto o servicio</div>
-                    <div class="option-description">Garantías, reclamos, devoluciones</div>
-                </div>
-            </label>
-
-            <label class="option-item" onclick="selectOption('medico')">
-                <input type="radio" name="category" value="medico">
-                <div class="option-icon">🏥</div>
-                <div class="option-content">
-                    <div class="option-title">Tengo problemas médicos</div>
-                    <div class="option-description">Negligencias médicas, errores hospitalarios</div>
-                </div>
-            </label>
-
-            <label class="option-item" onclick="selectOption('arriendo')">
-                <input type="radio" name="category" value="arriendo">
-                <div class="option-icon">🏠</div>
-                <div class="option-content">
-                    <div class="option-title">Tengo problemas con un arriendo</div>
-                    <div class="option-description">Contratos, desalojos, garantías</div>
-                </div>
-            </label>
-        </div>
-    </div>
-
-    <script>
-        let auth;
-        let initializing = true;
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyD242Qba3E-UgeA1UPXp9PgmjJK_Xg6VKY",
-            authDomain: "deudazero-b8e33.firebaseapp.com",
-            projectId: "deudazero-b8e33",
-            storageBucket: "deudazero-b8e33.firebasestorage.app",
-            messagingSenderId: "763390302400",
-            appId: "1:763390302400:web:6d9f294001f9af5731b525"
-        };
-
-        // Inicializar Firebase
         try {
-            if (!firebase.apps.length) {
-                firebase.initializeApp(firebaseConfig);
-            }
-            auth = firebase.auth();
-            console.log("Firebase inicializado correctamente");
+          sessionStorage.setItem('selectedCategory', category);
+          window.location.href = '/chat';
         } catch (error) {
-            console.error("Error al inicializar Firebase:", error);
+          console.error('Error al redireccionar:', error);
+          toggleLoading(false);
         }
+      }
+    }
 
-        // Verificar autenticación
-        auth.onAuthStateChanged((user) => {
-            if (!user) {
-                window.location.href = '/';
-                return;
-            }
+    /* <-- NUEVO: función que avisa que está en desarrollo */
+    function optionInDevelopment() {
+      alert("Esta opción está en desarrollo. ¡Pronto estará disponible!");
+    }
 
-            const userName = document.getElementById('userName');
-            if (userName) {
-                userName.textContent = user.displayName || user.email || 'Usuario';
-            }
-            toggleLoading(false);
-        });
+    document.getElementById('logoutButton').addEventListener('click', async () => {
+      toggleLoading(true);
+      try {
+        await auth.signOut();
+        window.location.href = '/';
+      } catch (error) {
+        console.error("Error al cerrar sesión:", error);
+        toggleLoading(false);
+      }
+    });
 
-        function toggleLoading(show) {
-            const loader = document.getElementById('loading');
-            if (loader) {
-                loader.style.display = show ? 'flex' : 'none';
-            }
-        }
-
-        function selectOption(category) {
-            console.log('Seleccionando categoría:', category);
-            
-            document.querySelectorAll('.option-item').forEach(item => {
-                item.classList.remove('selected');
-            });
-            
-            const selectedItem = document.querySelector(`[value="${category}"]`).closest('.option-item');
-            if (selectedItem) {
-                selectedItem.classList.add('selected');
-                
-                try {
-                    sessionStorage.setItem('selectedCategory', category);
-                    window.location.href = '/chat';
-                } catch (error) {
-                    console.error('Error al redireccionar:', error);
-                    toggleLoading(false);
-                }
-            }
-        }
-
-        document.getElementById('logoutButton').addEventListener('click', async () => {
-            toggleLoading(true);
-            try {
-                await auth.signOut();
-                window.location.href = '/';
-            } catch (error) {
-                console.error("Error al cerrar sesión:", error);
-                toggleLoading(false);
-            }
-        });
-
-        document.addEventListener('DOMContentLoaded', () => {
-            toggleLoading(true);
-        });
-    </script>
+    document.addEventListener('DOMContentLoaded', () => {
+      toggleLoading(true);
+    });
+  </script>
 </body>
 </html>
