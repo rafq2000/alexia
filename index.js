@@ -80,9 +80,10 @@ const authenticateUser = async (req, res, next) => {
 };
 
 // Ruta de verificación de salud del servidor
-app.get('/health', (req, res) => {
+app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+
 
 // Ruta del chat mejorada
 app.post('/api/chatWithAI', authenticateUser, async (req, res) => {
