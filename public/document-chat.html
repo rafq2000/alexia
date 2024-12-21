@@ -9,7 +9,6 @@
   <script src="/env-config.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
 
   <style>
     :root {
@@ -39,7 +38,6 @@
       padding: 20px;
       display: flex;
       flex-direction: column;
-      transition: all 0.3s ease;
     }
 
     .main-container {
@@ -52,7 +50,6 @@
       gap: 20px;
     }
 
-    /* Header Styles */
     .app-header {
       background: white;
       padding: 15px 30px;
@@ -82,7 +79,6 @@
       font-size: 24px;
       font-weight: 600;
       color: var(--primary);
-      letter-spacing: -0.5px;
     }
 
     .user-info {
@@ -109,314 +105,328 @@
     .logout-btn:hover {
       background: var(--primary);
     }
-    /* Document Container Styles */
+
     .document-container {
       background: white;
       border-radius: 15px;
       box-shadow: var(--message-shadow);
-      border: 1px solid rgba(0,0,0,0.05);
-      margin-top: 20px;
-      padding: 20px 30px;
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
+      padding: 30px;
+      margin: 20px 0;
     }
 
-    .document-container h2 {
-      font-size: 18px;
+    .title {
+      font-size: 24px;
       color: var(--primary);
-      margin-bottom: 5px;
-      font-weight: 600;
+      margin-bottom: 15px;
     }
 
-    .file-upload-label {
-      background: var(--light);
+    .description {
+      color: var(--dark);
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    .file-upload-zone {
       border: 2px dashed var(--border);
-      border-radius: 8px;
-      padding: 20px;
+      border-radius: 10px;
+      padding: 30px;
       text-align: center;
       cursor: pointer;
       transition: all 0.3s ease;
+      margin-bottom: 20px;
     }
 
-    .file-upload-label:hover {
-      background: #fafafa;
+    .file-upload-zone:hover {
       border-color: var(--accent);
+      background: #f8f9fa;
     }
 
-    .file-upload-label input {
+    .file-upload-zone input[type="file"] {
       display: none;
     }
 
     .file-list {
-      margin: 10px 0;
+      margin: 20px 0;
       max-height: 200px;
       overflow-y: auto;
     }
 
     .file-item {
-      padding: 8px;
+      padding: 10px;
       margin: 5px 0;
       background: #f8f9fa;
-      border-radius: 4px;
+      border-radius: 8px;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
 
-    .file-item small {
-      color: #666;
+    .query-input {
+      width: 100%;
+      padding: 15px;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      margin: 20px 0;
+      font-size: 1rem;
+      resize: vertical;
+      min-height: 100px;
     }
 
-    .doc-actions {
+    .query-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .action-buttons {
       display: flex;
-      gap: 10px;
-      align-items: center;
+      gap: 15px;
+      margin-top: 20px;
     }
 
-    .doc-actions button {
-      background: var(--accent);
-      color: white;
+    .btn {
+      padding: 12px 25px;
       border: none;
       border-radius: 8px;
-      padding: 10px 20px;
       cursor: pointer;
       transition: all 0.3s ease;
+      font-weight: 500;
     }
 
-    .doc-actions button:hover:not(:disabled) {
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
       background: var(--primary);
-      transform: translateY(-1px);
     }
 
-    .doc-actions button:disabled {
-      background: var(--border);
-      cursor: not-allowed;
+    .btn-primary:disabled {
       opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background: var(--light);
+      color: var(--dark);
     }
 
     .analysis-result {
-      background: var(--light);
+      margin-top: 20px;
       padding: 15px;
+      background: #f8f9fa;
       border-radius: 8px;
       white-space: pre-wrap;
-      box-shadow: var(--message-shadow);
       display: none;
     }
 
-    .connection-status {
+    .whatsapp-button {
       position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 10px 20px;
-      border-radius: 8px;
-      color: white;
-      font-weight: 500;
-      animation: statusAppear 0.3s forwards;
+      bottom: 30px;
+      right: 30px;
+      width: 60px;
+      height: 60px;
+      background: #25D366;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
       z-index: 1000;
     }
 
-    .connection-status.success {
-      background: var(--success);
+    .whatsapp-button:hover {
+      transform: scale(1.1);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     }
 
-    .connection-status.error {
-      background: var(--error);
+    .whatsapp-icon {
+      width: 35px;
+      height: 35px;
     }
 
-    @keyframes statusAppear {
-      from {
-        transform: translateY(-100%);
-        opacity: 0;
-      }
-      to {
-        transform: translateY(0);
-        opacity: 1;
-      }
-    }
-
-    /* Responsive styles */
     @media (max-width: 768px) {
       body {
         padding: 10px;
       }
 
       .app-header {
-        padding: 10px 15px;
+        padding: 15px;
         flex-direction: column;
         gap: 15px;
       }
 
-      .brand-name {
-        font-size: 20px;
-      }
-
       .document-container {
-        padding: 15px;
+        padding: 20px;
       }
 
-      .doc-actions {
+      .action-buttons {
         flex-direction: column;
       }
 
-      .doc-actions button {
-        width: 100%;
+      .whatsapp-button {
+        width: 50px;
+        height: 50px;
+        bottom: 20px;
+        right: 20px;
+      }
+
+      .whatsapp-icon {
+        width: 30px;
+        height: 30px;
       }
     }
   </style>
 </head>
 <body>
-    <div class="main-container">
-      <!-- ENCABEZADO -->
-      <header class="app-header">
-        <div class="brand" onclick="window.location.href='/menu'">
-          <img src="/assets/logo.png" alt="AbogadApp" class="logo">
-          <span class="brand-name">AbogadApp</span>
-        </div>
-        <div class="user-info">
-          <span id="userName" class="user-name">Cargando...</span>
-          <button id="logoutButton" class="logout-btn">Cerrar sesión</button>
-        </div>
-      </header>
-  
-      <!-- DOCS: Múltiples Archivos -->
-      <div class="document-container">
-        <h2>Análisis de Documentos</h2>
-        <p style="color: var(--dark);">
-          ¡Hola! Sube uno o varios archivos (contratos, resoluciones, etc.) 
-          y describe tu duda principal. AbogadApp te ayudará a interpretarlos.
-        </p>
-        
-        <label class="file-upload-label">
-          <div id="fileLabelText">Haz clic o arrastra archivos aquí</div>
-          <input type="file" id="fileInput" accept=".txt,.pdf,.png,.jpg,.jpeg,.doc,.docx" multiple />
-        </label>
-  
-        <div id="fileList" class="file-list"></div>
-  
-        <textarea
-          id="queryInput"
-          rows="2"
-          placeholder="¿Cuál es tu duda principal sobre estos documentos?"
-          style="width: 100%; padding: 10px; border: 2px solid var(--border); border-radius: 8px;"
-        ></textarea>
-  
-        <div class="doc-actions">
-          <button id="analyzeBtn" disabled>Analizar Documentos</button>
-          <button id="clearBtn" class="secondary" style="display: none;">Limpiar</button>
-          <div id="selectedFiles" style="font-size: 0.9rem; color: var(--dark);"></div>
-        </div>
-  
-        <div id="analysisResult" class="analysis-result"></div>
+  <div class="main-container">
+    <header class="app-header">
+      <div class="brand" onclick="window.location.href='/menu'">
+        <img src="/assets/logo.png" alt="AbogadApp Logo" class="logo">
+        <span class="brand-name">AbogadApp</span>
       </div>
+      <div class="user-info">
+        <span id="userName" class="user-name">Cargando...</span>
+        <button id="logoutButton" class="logout-btn">Cerrar sesión</button>
+      </div>
+    </header>
+
+    <div class="document-container">
+      <h1 class="title">Análisis de Documentos</h1>
+      <p class="description">
+        Sube uno o varios archivos (contratos, resoluciones, etc.) y describe tu consulta.
+        AbogadApp te ayudará a interpretarlos y explicarlos en términos simples.
+      </p>
+
+      <div class="file-upload-zone">
+        <div id="uploadText">Arrastra tus archivos aquí o haz clic para seleccionarlos</div>
+        <input type="file" id="fileInput" multiple accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png">
+      </div>
+
+      <div id="fileList" class="file-list"></div>
+
+      <textarea 
+        class="query-input"
+        id="queryInput"
+        placeholder="¿Qué necesitas saber sobre estos documentos? Escribe tu consulta aquí..."
+      ></textarea>
+
+      <div class="action-buttons">
+        <button id="analyzeBtn" class="btn btn-primary" disabled>
+          Analizar Documentos
+        </button>
+        <button id="clearBtn" class="btn btn-secondary" style="display: none;">
+          Limpiar
+        </button>
+      </div>
+
+      <div id="analysisResult" class="analysis-result"></div>
     </div>
-  
-    <!-- BOTÓN WHATSAPP -->
-    <div class="whatsapp-button" onclick="redirectToWhatsApp()">
-      <img src="/assets/whatsapp-icon.png" alt="WhatsApp" class="whatsapp-icon">
-    </div>
-  
-    <script>
-      // Configuración de Firebase
-      const firebaseConfig = {
-        apiKey: "AIzaSyD242Qba3E-UgeA1UPXp9PgmjJK_Xg6VKY",
-        authDomain: "deudazero-b8e33.firebaseapp.com",
-        projectId: "deudazero-b8e33",
-        storageBucket: "deudazero-b8e33.firebasestorage.app",
-        messagingSenderId: "763390302400",
-        appId: "1:763390302400:web:6d9f294001f9af5731b525"
-      };
-  
-      // Inicializar Firebase
-      if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
+  </div>
+
+  <div class="whatsapp-button" onclick="redirectToWhatsApp()">
+    <img src="/assets/whatsapp-icon.png" alt="WhatsApp" class="whatsapp-icon">
+  </div>
+
+  <script>
+    // Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyD242Qba3E-UgeA1UPXp9PgmjJK_Xg6VKY",
+      authDomain: "deudazero-b8e33.firebaseapp.com",
+      projectId: "deudazero-b8e33",
+      storageBucket: "deudazero-b8e33.firebasestorage.app",
+      messagingSenderId: "763390302400",
+      appId: "1:763390302400:web:6d9f294001f9af5731b525"
+    };
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const auth = firebase.auth();
+
+    // Auth Check
+    auth.onAuthStateChanged(user => {
+      if (!user) {
+        window.location.href = '/';
+        return;
       }
-      const auth = firebase.auth();
-  
-      // Verificación de autenticación corregida
-      auth.onAuthStateChanged(user => {
-        if (!user) {
-          window.location.href = '/'; // Redirigimos si no hay usuario
-          return;
-        }
-        document.getElementById('userName').textContent = user.displayName || user.email || 'Usuario';
-      });
-  
-      // Manejo de archivos múltiples
-      const fileInput = document.getElementById('fileInput');
-      const analyzeBtn = document.getElementById('analyzeBtn');
-      const clearBtn = document.getElementById('clearBtn');
-      const selectedFiles = document.getElementById('selectedFiles');
-      const fileList = document.getElementById('fileList');
-      const analysisResult = document.getElementById('analysisResult');
-      // Manejo de archivos
+      document.getElementById('userName').textContent = user.displayName || user.email || 'Usuario';
+    });
+
+    // File Handling
+    const fileInput = document.getElementById('fileInput');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const fileList = document.getElementById('fileList');
+    const analysisResult = document.getElementById('analysisResult');
+    const queryInput = document.getElementById('queryInput');
+
     fileInput.addEventListener('change', function(e) {
-      const files = e.target.files;
-      if (files.length > 0) {
+      if (e.target.files.length > 0) {
         analyzeBtn.disabled = false;
-        clearBtn.style.display = 'inline-block';
-        selectedFiles.innerHTML = `Archivos seleccionados: ${files.length}`;
-        
-        // Mostrar lista de archivos
-        fileList.innerHTML = '';
-        Array.from(files).forEach(file => {
-          const fileSize = formatFileSize(file.size);
-          const fileDiv = document.createElement('div');
-          fileDiv.className = 'file-item';
-          fileDiv.innerHTML = `
-            <span>${file.name}</span>
-            <small>${fileSize}</small>
-          `;
-          fileList.appendChild(fileDiv);
-        });
+        clearBtn.style.display = 'block';
+        updateFileList(e.target.files);
       } else {
-        resetFileInput();
+        resetForm();
       }
     });
 
+    function updateFileList(files) {
+      fileList.innerHTML = '';
+      Array.from(files).forEach(file => {
+        const fileDiv = document.createElement('div');
+        fileDiv.className = 'file-item';
+        fileDiv.innerHTML = `
+          <span>${file.name}</span>
+          <small>${formatFileSize(file.size)}</small>
+        `;
+        fileList.appendChild(fileDiv);
+      });
+    }
+
     function formatFileSize(bytes) {
-      if (bytes === 0) return '0 Bytes';
+      if (bytes === 0) return '0 B';
       const k = 1024;
-      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const sizes = ['B', 'KB', 'MB', 'GB'];
       const i = Math.floor(Math.log(bytes) / Math.log(k));
       return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
 
-    function resetFileInput() {
+    function resetForm() {
       fileInput.value = '';
+      queryInput.value = '';
+      fileList.innerHTML = '';
       analyzeBtn.disabled = true;
       clearBtn.style.display = 'none';
-      selectedFiles.innerHTML = '';
-      fileList.innerHTML = '';
       analysisResult.style.display = 'none';
     }
 
-    clearBtn.addEventListener('click', resetFileInput);
+    clearBtn.addEventListener('click', resetForm);
 
-    // Analizar documentos
+    // Document Analysis
     analyzeBtn.addEventListener('click', async function() {
-      if (!fileInput.files || fileInput.files.length === 0) return;
+      if (!fileInput.files.length) return;
 
       try {
-        const user = auth.currentUser;
-        if (!user) {
-          alert("Por favor inicia sesión para analizar documentos.");
-          return;
-        }
-
         analyzeBtn.disabled = true;
         analyzeBtn.textContent = 'Analizando...';
 
+        const user = auth.currentUser;
+        if (!user) {
+          alert('Por favor inicia sesión para continuar');
+          return;
+        }
+
         const token = await user.getIdToken();
         const formData = new FormData();
-        
-        // Agregar todos los archivos
-        Array.from(fileInput.files).forEach((file, index) => {
+
+        Array.from(fileInput.files).forEach(file => {
           formData.append('document', file);
         });
-        
-        const query = document.getElementById('queryInput').value.trim();
-        formData.append('query', query);
+
+        formData.append('query', queryInput.value || 'Por favor, explica estos documentos');
 
         const response = await fetch('/api/analyzeDocument', {
           method: 'POST',
@@ -426,59 +436,43 @@
           body: formData
         });
 
-        const data = await response.json();
+        const result = await response.json();
 
         if (response.ok) {
           analysisResult.style.display = 'block';
-          analysisResult.textContent = data.response;
+          analysisResult.textContent = result.response;
           analysisResult.scrollIntoView({ behavior: 'smooth' });
         } else {
-          throw new Error(data.error || 'Error al analizar documentos');
+          throw new Error(result.error || 'Error al analizar documentos');
         }
-
       } catch (error) {
         console.error('Error:', error);
-        showConnectionStatus(error.message || 'Error al procesar los documentos', 'error');
+        alert(error.message || 'Error al procesar los documentos');
       } finally {
         analyzeBtn.disabled = false;
         analyzeBtn.textContent = 'Analizar Documentos';
       }
     });
 
-    // Cerrar sesión
+    // Utils
+    function redirectToWhatsApp() {
+      const phoneNumber = '+56999999999';
+      const text = encodeURIComponent('Hola, necesito ayuda con documentos legales.');
+      window.open(`https://wa.me/${phoneNumber}?text=${text}`, '_blank');
+    }
+
+    // Logout
     document.getElementById('logoutButton').addEventListener('click', async () => {
       try {
         await auth.signOut();
         window.location.href = '/';
       } catch (error) {
-        console.error("Error al cerrar sesión:", error);
-        showConnectionStatus('Error al cerrar sesión', 'error');
+        console.error('Error al cerrar sesión:', error);
+        alert('Error al cerrar sesión');
       }
     });
 
-    // Utilidades
-    function showConnectionStatus(message, type) {
-      const existingStatus = document.querySelector('.connection-status');
-      if (existingStatus) existingStatus.remove();
-
-      const statusDiv = document.createElement('div');
-      statusDiv.className = `connection-status ${type}`;
-      statusDiv.textContent = message;
-      document.body.appendChild(statusDiv);
-
-      setTimeout(() => {
-        statusDiv.style.opacity = '0';
-        setTimeout(() => statusDiv.remove(), 300);
-      }, 3000);
-    }
-
-    function redirectToWhatsApp() {
-      const phoneNumber = '+56999999999';
-      const text = encodeURIComponent('Hola, necesito ayuda con varios documentos. ¿Podrías asesorarme?');
-      window.open(`https://wa.me/${phoneNumber}?text=${text}`, '_blank');
-    }
-
-    // Prevenir cierre accidental
+    // Prevent accidental close
     window.addEventListener('beforeunload', (e) => {
       if (fileInput.files.length > 0 && !analysisResult.textContent) {
         e.preventDefault();
