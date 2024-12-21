@@ -36,52 +36,51 @@
             padding: 20px;
         }
 
-        .logo-container {
-            text-align: center;
-            margin-bottom: 20px;
+        .chat-container {
+            max-width: 800px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 100px);
         }
 
-        .logo {
-            width: 80px;
-            margin-bottom: 10px;
-        }
-
-        .app-name {
-            color: var(--primary);
-            font-size: 24px;
-            font-weight: bold;
-        }
-
-        .user-header {
+        .chat-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 20px;
-            background: white;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            background-color: white;
+            border-radius: 10px 10px 0 0;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .user-name {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--dark);
         }
 
         .logout-btn {
             padding: 8px 16px;
-            background-color: var(--accent);
+            background: var(--accent);
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            transition: all 0.3s;
         }
 
-        .chat-container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            height: calc(100vh - 200px);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
+        .logout-btn:hover {
+            background: var(--primary);
         }
 
         .chat-messages {
@@ -91,29 +90,24 @@
         }
 
         .message {
-            margin-bottom: 15px;
-            display: flex;
-            flex-direction: column;
+            margin-bottom: 20px;
+            max-width: 80%;
+        }
+
+        .message.user-message {
+            margin-left: auto;
         }
 
         .message-content {
-            padding: 10px 15px;
-            border-radius: 15px;
-            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 10px;
+            display: inline-block;
             word-wrap: break-word;
-        }
-
-        .user-message {
-            align-items: flex-end;
         }
 
         .user-message .message-content {
             background: var(--accent);
             color: white;
-        }
-
-        .assistant-message {
-            align-items: flex-start;
         }
 
         .assistant-message .message-content {
@@ -126,52 +120,40 @@
             border-top: 1px solid var(--border);
             display: flex;
             gap: 10px;
+            background: white;
+            border-radius: 0 0 10px 10px;
         }
 
         .chat-input textarea {
             flex: 1;
-            padding: 10px;
+            padding: 12px;
             border: 1px solid var(--border);
-            border-radius: 5px;
+            border-radius: 8px;
             resize: none;
-            min-height: 40px;
-            max-height: 100px;
+            font-size: 14px;
+            line-height: 1.4;
+            height: 45px;
+            max-height: 120px;
+        }
+
+        .chat-input textarea:focus {
+            outline: none;
+            border-color: var(--accent);
         }
 
         .send-btn {
-            padding: 10px 20px;
+            padding: 0 20px;
             background: var(--accent);
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
-            height: 40px;
+            height: 45px;
         }
 
         .send-btn:disabled {
             background: var(--border);
             cursor: not-allowed;
-        }
-
-        .question-options {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin: 10px 0;
-        }
-
-        .question-option {
-            padding: 8px 16px;
-            background: var(--light);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .question-option:hover {
-            background: var(--accent);
-            color: white;
         }
 
         .whatsapp-button {
@@ -187,7 +169,7 @@
             justify-content: center;
             cursor: pointer;
             box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            transition: all 0.3s;
+            transition: transform 0.3s;
         }
 
         .whatsapp-button:hover {
@@ -201,18 +183,16 @@
     </style>
 </head>
 <body>
-    <div class="logo-container">
-        <img src="/assets/logo.png" alt="AbogadApp" class="logo" onclick="window.location.href='/menu'">
-        <div class="app-name">AbogadApp</div>
-    </div>
-
-    <div class="user-header">
-        <span id="userName">Ricardo Farias</span>
-        <button id="logoutButton" class="logout-btn">Cerrar sesión</button>
-    </div>
-
     <div class="chat-container">
+        <div class="chat-header">
+            <div class="user-info">
+                <span id="userName" class="user-name">Ricardo Farias</span>
+                <button id="logoutButton" class="logout-btn">Cerrar sesión</button>
+            </div>
+        </div>
+
         <div id="chatMessages" class="chat-messages"></div>
+
         <div class="chat-input">
             <textarea 
                 id="messageInput" 
@@ -230,7 +210,7 @@
         let auth;
         let selectedCategory;
         let isProcessing = false;
-        let userResponses = {};
+        let conversationHistory = [];
 
         // Configuración de Firebase
         const firebaseConfig = {
@@ -265,117 +245,15 @@
                 return;
             }
 
+            document.getElementById('userName').textContent = user.displayName || user.email || 'Usuario';
             initializeChat();
         });
 
-        const QUESTIONS = {
-            'deudas': [
-                { 
-                    text: '¿Qué tipo de deuda tienes?',
-                    options: ['Bancaria', 'Tarjeta de crédito', 'Préstamo personal', 'Otra']
-                },
-                {
-                    text: '¿Hace cuánto tiempo está vencida la deuda?',
-                    options: ['Menos de 30 días', '30-90 días', 'Más de 90 días', 'No está vencida']
-                },
-                {
-                    text: '¿Has recibido notificaciones legales?',
-                    options: ['Sí', 'No', 'No estoy seguro']
-                }
-            ]
-        };
-
-        let currentQuestionIndex = 0;
-
         function initializeChat() {
-            const welcomeMessage = `Hola, veo que tienes consultas sobre problemas con deudas o bancos. Por favor, responde estas preguntas para ayudarte mejor:`;
+            const welcomeMessage = `Hola, veo que tienes consultas sobre problemas con deudas o bancos. Por favor, responde estas preguntas para ayudarte mejor:
+            
+¿Qué tipo de deuda tienes? (por ejemplo: bancaria, tarjeta de crédito, préstamo personal u otra)`;
             addMessage(welcomeMessage, 'assistant');
-            showNextQuestion();
-        }
-
-        function showNextQuestion() {
-            const questions = QUESTIONS[selectedCategory] || [];
-            if (currentQuestionIndex >= questions.length) {
-                processAllResponses();
-                return;
-            }
-
-            const currentQuestion = questions[currentQuestionIndex];
-            addMessage(currentQuestion.text, 'assistant');
-
-            const optionsDiv = document.createElement('div');
-            optionsDiv.className = 'question-options';
-            
-            currentQuestion.options.forEach(option => {
-                const button = document.createElement('button');
-                button.className = 'question-option';
-                button.textContent = option;
-                button.onclick = () => handleOptionSelection(option);
-                optionsDiv.appendChild(button);
-            });
-
-            document.getElementById('chatMessages').appendChild(optionsDiv);
-            scrollToBottom();
-        }
-
-        async function handleOptionSelection(option) {
-            // Remover opciones anteriores
-            const optionsDiv = document.querySelector('.question-options');
-            if (optionsDiv) {
-                optionsDiv.remove();
-            }
-
-            // Guardar respuesta
-            const questions = QUESTIONS[selectedCategory];
-            userResponses[questions[currentQuestionIndex].text] = option;
-            
-            // Mostrar respuesta del usuario
-            addMessage(option, 'user');
-            
-            currentQuestionIndex++;
-            
-            if (currentQuestionIndex < questions.length) {
-                // Mostrar siguiente pregunta
-                showNextQuestion();
-            } else {
-                // Procesar todas las respuestas al finalizar el cuestionario
-                await processAllResponses();
-            }
-        }
-
-        async function processAllResponses() {
-            const summary = Object.entries(userResponses)
-                .map(([question, answer]) => `${question} ${answer}`)
-                .join('\n');
-
-            try {
-                const token = await auth.currentUser.getIdToken();
-                const response = await fetch('/api/chatWithAI', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({
-                        message: summary,
-                        category: selectedCategory,
-                        isQuestionnaireComplete: true,
-                        userResponses
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error('Error en la respuesta del servidor');
-                }
-
-                const data = await response.json();
-                if (data.response) {
-                    addMessage(data.response, 'assistant');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                addMessage('Lo siento, ha ocurrido un error. Por favor, intenta nuevamente.', 'assistant');
-            }
         }
 
         async function sendMessage() {
@@ -388,11 +266,11 @@
             
             isProcessing = true;
             input.disabled = true;
-            const sendButton = document.getElementById('sendButton');
-            sendButton.disabled = true;
+            document.getElementById('sendButton').disabled = true;
             
             input.value = '';
             addMessage(message, 'user');
+            conversationHistory.push({ role: 'user', content: message });
 
             try {
                 const token = await auth.currentUser.getIdToken();
@@ -405,7 +283,7 @@
                     body: JSON.stringify({
                         message,
                         category: selectedCategory,
-                        userResponses
+                        conversationHistory
                     })
                 });
 
@@ -416,6 +294,9 @@
                 const data = await response.json();
                 if (data.response) {
                     addMessage(data.response, 'assistant');
+                    conversationHistory.push({ role: 'assistant', content: data.response });
+                    await saveMessageToFirestore(message, 'user');
+                    await saveMessageToFirestore(data.response, 'assistant');
                 }
             } catch (error) {
                 console.error('Error:', error);
@@ -423,8 +304,9 @@
             } finally {
                 isProcessing = false;
                 input.disabled = false;
-                sendButton.disabled = false;
+                document.getElementById('sendButton').disabled = false;
                 input.focus();
+                adjustTextareaHeight(input);
             }
         }
 
@@ -434,16 +316,39 @@
             messageDiv.className = `message ${sender}-message`;
             messageDiv.innerHTML = `<div class="message-content">${text}</div>`;
             messagesDiv.appendChild(messageDiv);
-            scrollToBottom();
-        }
-
-        function scrollToBottom() {
-            const messagesDiv = document.getElementById('chatMessages');
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
 
+        async function saveMessageToFirestore(message, sender) {
+            try {
+                const user = auth.currentUser;
+                if (!user) return;
+
+                const db = firebase.firestore();
+                await db.collection('chats').add({
+                    userId: user.uid,
+                    message: message,
+                    sender: sender,
+                    category: selectedCategory,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            } catch (error) {
+                console.error('Error al guardar mensaje:', error);
+            }
+        }
+
+        function adjustTextareaHeight(textarea) {
+            textarea.style.height = '45px';
+            textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+        }
+
         // Event Listeners
-        document.getElementById('messageInput').addEventListener('keydown', (e) => {
+        const messageInput = document.getElementById('messageInput');
+        messageInput.addEventListener('input', function() {
+            adjustTextareaHeight(this);
+        });
+
+        messageInput.addEventListener('keydown', function(e) {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 sendMessage();
