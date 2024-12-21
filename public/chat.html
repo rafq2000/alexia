@@ -126,6 +126,7 @@
             border-top: 1px solid var(--border);
             display: flex;
             gap: 10px;
+            position: relative;
         }
 
         .chat-input textarea {
@@ -163,31 +164,59 @@
             cursor: not-allowed;
         }
 
-        .loading {
-            display: none;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .loading-dots {
+        .thinking {
             display: flex;
-            gap: 8px;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 20px;
         }
 
-        .loading-dots span {
+        .thinking-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .thinking-dots span {
             width: 8px;
             height: 8px;
             background-color: var(--accent);
             border-radius: 50%;
-            animation: bounce 1.4s infinite ease-in-out;
+            animation: blink 1.4s infinite both;
         }
 
-        .loading-dots span:nth-child(1) { animation-delay: -0.32s; }
-        .loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+        .thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
 
-        @keyframes bounce {
-            0%, 80%, 100% { transform: scale(0); }
-            40% { transform: scale(1); }
+        @keyframes blink {
+            0%, 80%, 100% { opacity: 0.4; transform: scale(0.8); }
+            40% { opacity: 1; transform: scale(1); }
+        }
+
+        .whatsapp-button {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            z-index: 1000;
+            background-color: #25D366;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .whatsapp-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+        }
+
+        .whatsapp-icon {
+            width: 30px;
+            height: 30px;
         }
 
         @media (max-width: 600px) {
@@ -210,52 +239,16 @@
             .message {
                 max-width: 90%;
             }
-        }
 
-        .whatsapp-button {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    z-index: 1000;
-    background-color: #25D366;
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-@media (max-width: 768px) {
-    .whatsapp-button {
-        bottom: 80px; /* Ajustar la posición en móviles */
-        right: 20px;
-        width: 50px;
-        height: 50px;
-    }
-
-    .chat-input {
-        padding-bottom: 100px; /* Dar más espacio al área de input */
-    }
-}
-
-        .whatsapp-button:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 16px rgba(0,0,0,0.2);
-        }
-
-        .whatsapp-icon {
-            width: 35px;
-            height: 35px;
+            .chat-input {
+                padding-bottom: 90px;
+            }
         }
     </style>
 </head>
 <body>
     <header class="header">
-        <img src="/assets/logo.png" alt="DeudaZero Logo" class="logo" onclick="window.location.href='/menu'">
+        <img src="/assets/logo.png" alt="AbogadApp Logo" class="logo" onclick="window.location.href='/menu'">
         <div class="user-info">
             <span id="userName" class="user-name">Usuario</span>
             <button id="logoutButton" class="logout-btn">Cerrar sesión</button>
@@ -265,14 +258,6 @@
     <div class="chat-container">
         <div id="chatMessages" class="chat-messages"></div>
         
-        <div id="loading" class="loading">
-            <div class="loading-dots">
-                <span></span>
-                <span></span>
-                <span></span>
-            </div>
-        </div>
-
         <div class="chat-input">
             <textarea 
                 id="messageInput" 
@@ -291,7 +276,7 @@
     <script>
         let auth;
         let selectedCategory;
-    
+
         // Configuración de Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyD242Qba3E-UgeA1UPXp9PgmjJK_Xg6VKY",
@@ -301,7 +286,7 @@
             messagingSenderId: "763390302400",
             appId: "1:763390302400:web:6d9f294001f9af5731b525"
         };
-    
+
         // Inicializar Firebase
         try {
             if (!firebase.apps.length) {
@@ -312,33 +297,33 @@
         } catch (error) {
             console.error("Error al inicializar Firebase:", error);
         }
-    
+
         // Verificar autenticación
         auth.onAuthStateChanged(async (user) => {
             if (!user) {
                 window.location.href = '/';
                 return;
             }
-    
+
             const userName = document.getElementById('userName');
             if (userName) {
                 userName.textContent = user.displayName || user.email || 'Usuario';
             }
-    
+
             selectedCategory = sessionStorage.getItem('selectedCategory');
             if (!selectedCategory) {
                 window.location.href = '/menu';
                 return;
             }
-    
+
             initializeChat();
         });
-    
+
         function initializeChat() {
             const welcomeMessage = `Hola, veo que tienes consultas sobre ${getCategoryName(selectedCategory)}. ¿En qué puedo ayudarte?`;
             addMessage(welcomeMessage, 'assistant');
         }
-    
+
         function getCategoryName(category) {
             const categories = {
                 'deudas': 'problemas con deudas o bancos',
@@ -353,7 +338,7 @@
             };
             return categories[category] || 'consultas generales';
         }
-    
+
         async function sendMessage() {
             const input = document.getElementById('messageInput');
             const message = input.value.trim();
@@ -362,7 +347,18 @@
             
             input.value = '';
             addMessage(message, 'user');
-    
+
+            // Agregar indicador de pensando
+            const thinkingDiv = document.createElement('div');
+            thinkingDiv.className = 'thinking';
+            thinkingDiv.innerHTML = `
+                <div class="thinking-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>`;
+            document.getElementById('chatMessages').appendChild(thinkingDiv);
+
             try {
                 const token = await auth.currentUser.getIdToken();
                 const response = await fetch('/api/chatWithAI', {
@@ -376,7 +372,10 @@
                         category: selectedCategory
                     })
                 });
-    
+
+                // Remover indicador de pensando
+                thinkingDiv.remove();
+
                 if (response.ok) {
                     const data = await response.json();
                     addMessage(data.response, 'assistant');
@@ -385,10 +384,11 @@
                 }
             } catch (error) {
                 console.error('Error:', error);
+                thinkingDiv.remove();
                 addMessage('Lo siento, ha ocurrido un error. Por favor, intenta nuevamente.', 'assistant');
             }
         }
-    
+
         function addMessage(text, sender) {
             const messagesDiv = document.getElementById('chatMessages');
             const messageDiv = document.createElement('div');
@@ -397,32 +397,31 @@
             messagesDiv.appendChild(messageDiv);
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
-    
+
         // Manejar logout
         document.getElementById('logoutButton').addEventListener('click', async () => {
             try {
                 await auth.signOut();
-                console.log("Sesión cerrada");
                 window.location.href = '/';
             } catch (error) {
                 console.error("Error al cerrar sesión:", error);
             }
         });
-    
+
         // Auto-expand textarea
         const messageInput = document.getElementById('messageInput');
         messageInput.addEventListener('input', function() {
             this.style.height = 'auto';
             this.style.height = (this.scrollHeight) + 'px';
         });
-    
+
         function redirectToWhatsApp() {
             const phoneNumber = '+56999999999'; // Reemplaza con tu número
             window.open(`https://wa.me/${phoneNumber}?text=Hola, necesito ayuda legal`, '_blank');
         }
-    
+
         // Event listener para Enter en el input
-        document.getElementById('messageInput').addEventListener('keydown', function(e) {
+        messageInput.addEventListener('keydown', function(e) {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 sendMessage();
