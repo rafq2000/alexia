@@ -36,24 +36,37 @@
       padding: 20px;
     }
 
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
     .header {
       background-color: white;
-      padding: 20px;
+      padding: 15px 30px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      border-radius: 10px;
+      margin-bottom: 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 30px;
-      border-radius: 10px;
     }
 
-    .logo {
-      width: 150px;
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
       cursor: pointer;
     }
 
-    .logo:hover {
-      opacity: 0.9;
+    .logo {
+      width: 40px;
+      height: 40px;
+      object-fit: contain;
     }
 
     .user-info {
@@ -68,8 +81,8 @@
     }
 
     .logout-btn {
-      padding: 10px 20px;
-      background-color: var(--accent);
+      padding: 8px 20px;
+      background: var(--accent);
       color: white;
       border: none;
       border-radius: 5px;
@@ -78,80 +91,66 @@
     }
 
     .logout-btn:hover {
-      background-color: var(--primary);
-    }
-
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
-      background: white;
-      padding: 30px;
-      border-radius: 15px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      background: var(--primary);
     }
 
     .title {
-      font-size: 24px;
       color: var(--primary);
-      margin-bottom: 20px;
+      font-size: 24px;
+      margin-bottom: 15px;
     }
 
     .description {
       color: var(--dark);
-      margin-bottom: 20px;
+      margin-bottom: 25px;
       line-height: 1.5;
     }
 
-    .file-upload {
-      margin: 20px 0;
+    .upload-section {
       text-align: center;
+      margin: 30px 0;
     }
 
-    .btn-upload {
-      padding: 15px 30px;
+    .select-files-btn {
+      padding: 12px 25px;
       background: var(--accent);
       color: white;
       border: none;
       border-radius: 8px;
       cursor: pointer;
       font-size: 16px;
-      font-weight: 500;
       transition: all 0.3s ease;
     }
 
-    .btn-upload:hover {
+    .select-files-btn:hover {
       background: var(--primary);
-      transform: translateY(-1px);
     }
 
     .file-list {
-      margin: 15px 0;
-      padding: 10px;
-      border-radius: 8px;
+      margin: 20px 0;
     }
 
     .file-item {
-      padding: 12px 15px;
-      margin: 8px 0;
+      padding: 10px 15px;
+      margin: 5px 0;
       background: #f8f9fa;
       border-radius: 8px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
 
-    .file-item small {
+    .file-info small {
       color: #666;
     }
 
     .query-input {
       width: 100%;
       padding: 15px;
-      margin: 20px 0;
       border: 2px solid var(--border);
       border-radius: 8px;
-      font-size: 16px;
+      margin: 20px 0;
+      font-size: 15px;
       min-height: 100px;
       resize: vertical;
     }
@@ -161,50 +160,57 @@
       border-color: var(--accent);
     }
 
-    .action-buttons {
-      display: flex;
-      gap: 15px;
-      margin-top: 20px;
-    }
-
-    .btn {
+    .analyze-btn {
       padding: 12px 25px;
+      background: var(--accent);
+      color: white;
       border: none;
       border-radius: 8px;
       cursor: pointer;
       font-size: 16px;
-      font-weight: 500;
       transition: all 0.3s ease;
     }
 
-    .btn-primary {
-      background: var(--accent);
-      color: white;
-    }
-
-    .btn-primary:hover:not(:disabled) {
-      background: var(--primary);
-      transform: translateY(-1px);
-    }
-
-    .btn-primary:disabled {
+    .analyze-btn:disabled {
       opacity: 0.7;
       cursor: not-allowed;
     }
 
-    .btn-secondary {
-      background: var(--light);
-      color: var(--dark);
+    .analyze-btn:hover:not(:disabled) {
+      background: var(--primary);
+    }
+
+    .response-container {
+      margin-top: 20px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 20px;
+      display: none;
+    }
+
+    .loading-indicator {
+      text-align: center;
+      padding: 20px;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      margin: 10px auto;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
 
     .analysis-result {
-      margin-top: 20px;
-      padding: 20px;
-      background: #f8f9fa;
-      border-radius: 8px;
       white-space: pre-wrap;
-      display: none;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      line-height: 1.6;
     }
 
     .whatsapp-button {
@@ -226,7 +232,6 @@
 
     .whatsapp-button:hover {
       transform: scale(1.1);
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     }
 
     .whatsapp-icon {
@@ -239,28 +244,23 @@
         padding: 10px;
       }
 
-      .header {
-        flex-direction: column;
-        gap: 15px;
-      }
-
       .container {
         padding: 20px;
       }
 
-      .action-buttons {
+      .header {
         flex-direction: column;
-      }
-
-      .btn {
-        width: 100%;
+        gap: 15px;
       }
     }
   </style>
 </head>
 <body>
   <header class="header">
-    <img src="/assets/logo.png" alt="AbogadApp Logo" class="logo" onclick="window.location.href='/menu'">
+    <div class="brand" onclick="window.location.href='/menu'">
+      <img src="/assets/logo.png" alt="AbogadApp" class="logo">
+      <span class="brand-name">AbogadApp</span>
+    </div>
     <div class="user-info">
       <span id="userName" class="user-name">Cargando...</span>
       <button id="logoutButton" class="logout-btn">Cerrar sesión</button>
@@ -274,8 +274,8 @@
       AbogadApp te ayudará a interpretarlos y explicarlos en términos simples.
     </p>
 
-    <div class="file-upload">
-      <button class="btn-upload" onclick="document.getElementById('fileInput').click()">
+    <div class="upload-section">
+      <button class="select-files-btn" onclick="document.getElementById('fileInput').click()">
         Seleccionar Archivos
       </button>
       <input 
@@ -292,16 +292,20 @@
     <textarea
       id="queryInput"
       class="query-input"
-      placeholder="¿Cuál es tu consulta sobre estos documentos?"
+      placeholder="¿Qué necesitas saber sobre estos documentos?"
     ></textarea>
 
-    <div class="action-buttons">
-      <button id="analyzeBtn" class="btn btn-primary" disabled>
-        Analizar Documentos
-      </button>
-    </div>
+    <button id="analyzeBtn" class="analyze-btn" disabled>
+      Analizar Documentos
+    </button>
 
-    <div id="analysisResult" class="analysis-result"></div>
+    <div id="responseContainer" class="response-container">
+      <div id="loadingIndicator" class="loading-indicator">
+        <div class="spinner"></div>
+        <p>Analizando documentos...</p>
+      </div>
+      <div id="analysisResult" class="analysis-result"></div>
+    </div>
   </div>
 
   <div class="whatsapp-button" onclick="redirectToWhatsApp()">
@@ -323,6 +327,7 @@
     }
     const auth = firebase.auth();
 
+    // Auth Check
     auth.onAuthStateChanged(user => {
       if (!user) {
         window.location.href = '/';
@@ -331,15 +336,20 @@
       document.getElementById('userName').textContent = user.displayName || user.email || 'Usuario';
     });
 
+    // File Handling
     const fileInput = document.getElementById('fileInput');
     const analyzeBtn = document.getElementById('analyzeBtn');
     const fileList = document.getElementById('fileList');
+    const responseContainer = document.getElementById('responseContainer');
+    const loadingIndicator = document.getElementById('loadingIndicator');
     const analysisResult = document.getElementById('analysisResult');
 
     fileInput.addEventListener('change', function(e) {
       if (e.target.files.length > 0) {
         analyzeBtn.disabled = false;
         updateFileList(e.target.files);
+      } else {
+        resetForm();
       }
     });
 
@@ -364,12 +374,22 @@
       return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
 
+    function resetForm() {
+      fileInput.value = '';
+      fileList.innerHTML = '';
+      analyzeBtn.disabled = true;
+      responseContainer.style.display = 'none';
+    }
+
     analyzeBtn.addEventListener('click', async function() {
       if (!fileInput.files.length) return;
 
       try {
+        // Mostrar loading y ocultar resultado anterior
+        responseContainer.style.display = 'block';
+        loadingIndicator.style.display = 'block';
+        analysisResult.style.display = 'none';
         analyzeBtn.disabled = true;
-        analyzeBtn.textContent = 'Analizando...';
 
         const user = auth.currentUser;
         if (!user) {
@@ -398,18 +418,20 @@
         const result = await response.json();
 
         if (response.ok) {
+          loadingIndicator.style.display = 'none';
           analysisResult.style.display = 'block';
-          analysisResult.textContent = result.response;
+          analysisResult.innerHTML = `<strong>Análisis:</strong><br><br>${result.response}`;
           analysisResult.scrollIntoView({ behavior: 'smooth' });
         } else {
           throw new Error(result.error || 'Error al analizar documentos');
         }
       } catch (error) {
         console.error('Error:', error);
-        alert(error.message || 'Error al procesar los documentos');
+        loadingIndicator.style.display = 'none';
+        analysisResult.style.display = 'block';
+        analysisResult.innerHTML = `<div style="color: var(--error)">Error: ${error.message || 'Error al procesar los documentos'}</div>`;
       } finally {
         analyzeBtn.disabled = false;
-        analyzeBtn.textContent = 'Analizar Documentos';
       }
     });
 
