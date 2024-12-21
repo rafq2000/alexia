@@ -8,7 +8,7 @@ const path = require('path');
 const dotenv = require('dotenv');
 const OpenAI = require('openai');
 
-// NUEVAS DEPENDENCIAS para análisis de archivos
+// Dependencias para análisis de archivos
 const multer = require('multer');
 const Tesseract = require('tesseract.js');
 const PDFParser = require('pdf-parse');
@@ -18,7 +18,7 @@ dotenv.config();
 
 const app = express();
 
-// 1. Inicialización de Firebase Admin
+// 1. Inicializar Firebase Admin
 try {
   const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
   admin.initializeApp({
@@ -30,7 +30,7 @@ try {
   process.exit(1);
 }
 
-// 2. Inicialización de Firestore
+// 2. Firestore
 const db = admin.firestore();
 
 // 3. Middlewares
@@ -52,7 +52,7 @@ app.get('/env-config.js', (req, res) => {
   res.send(`window.ENV = ${JSON.stringify(envVars)};`);
 });
 
-// 5. Inicialización de OpenAI (forma antigua, con new OpenAI())
+// 5. OpenAI (versión antigua)
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
@@ -89,12 +89,12 @@ const authenticateUser = async (req, res, next) => {
   }
 };
 
-// 7. Ruta de verificación de salud del servidor
+// 7. Ruta de verificación de salud
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// 8. Ruta del chat (versión antigua)
+// 8. Ruta del chat
 app.post('/api/chatWithAI', authenticateUser, async (req, res) => {
   const startTime = Date.now();
   try {
@@ -107,18 +107,20 @@ app.post('/api/chatWithAI', authenticateUser, async (req, res) => {
       });
     }
 
-    console.log(`Procesando mensaje para usuario ${req.user.uid} en categoría ${category}`);
+    console.log(`Procesando mensaje para usuario ${req.user.uid}, categoría: ${category}`);
 
-    const systemContent = `Eres un asistente legal... etc.`;
+    // Mensaje del sistema
+    const systemContent = `Eres un asistente legal especializado en temas de deudas y documentos legales.`;
     let messages = [{ role: 'system', content: systemContent }];
 
+    // Historial de conversación
     if (conversationHistory.length > 0) {
       messages = [...messages, ...conversationHistory.slice(-5)];
     }
-
+    // Agregar mensaje actual
     messages.push({ role: 'user', content: message });
 
-    // Llamada con la API antigua
+    // Crear respuesta (versión antigua de openai)
     const completion = await openai.chat.completions.create({
       model: 'gpt-4',
       messages,
@@ -140,13 +142,10 @@ app.post('/api/chatWithAI', authenticateUser, async (req, res) => {
         timestamp: admin.firestore.FieldValue.serverTimestamp()
       });
 
-      await db.collection('stats').doc('global').set(
-        {
-          totalConsultas: admin.firestore.FieldValue.increment(1),
-          ultimaActualizacion: admin.firestore.FieldValue.serverTimestamp()
-        },
-        { merge: true }
-      );
+      await db.collection('stats').doc('global').set({
+        totalConsultas: admin.firestore.FieldValue.increment(1),
+        ultimaActualizacion: admin.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
     } catch (dbError) {
       console.error('Error al guardar en Firestore:', dbError);
     }
@@ -175,15 +174,17 @@ app.post('/api/chatWithAI', authenticateUser, async (req, res) => {
   }
 });
 
-/* ======================== NUEVA FUNCIONALIDAD (Documentos) ======================== */
+/* ======================== NUEVA FUNCIONALIDAD: Análisis de Documento ======================== */
 
 const upload = multer({ storage: multer.memoryStorage() });
 
 async function extractTextFromFile(file) {
   const mimeType = file.mimetype;
   let text = '';
+
   try {
     if (mimeType.startsWith('image/')) {
+      // Procesar imagen con Sharp + Tesseract
       const optimizedBuffer = await sharp(file.buffer)
         .resize(3000, 3000, { fit: 'inside' })
         .normalize()
@@ -194,14 +195,21 @@ async function extractTextFromFile(file) {
         logger: m => console.log(m)
       });
       text = result.data.text;
+
     } else if (mimeType === 'application/pdf') {
+      // Procesar PDF
       const pdfData = await PDFParser(file.buffer);
       text = pdfData.text;
+
     } else if (mimeType.startsWith('text/')) {
+      // Archivos de texto
       text = file.buffer.toString('utf-8');
+
     } else {
+      // Cualquier otro (docx, etc.) => leer binario como string (podría no ser óptimo)
       text = file.buffer.toString('utf-8');
     }
+
     return text;
   } catch (error) {
     console.error('Error procesando archivo:', error);
@@ -214,17 +222,17 @@ app.post('/api/analyzeDocument', authenticateUser, upload.single('document'), as
     if (!req.file) {
       return res.status(400).json({
         error: 'Documento no proporcionado',
-        details: 'Se requiere un archivo'
+        details: 'Se requiere un archivo para analizar'
       });
     }
 
     console.log(`Procesando documento: ${req.file.originalname} (${req.file.mimetype})`);
     const documentText = await extractTextFromFile(req.file);
 
-    if (!documentText || documentText.trim().length === 0) {
+    if (!documentText || !documentText.trim()) {
       return res.status(400).json({
         error: 'No se pudo extraer texto',
-        details: 'No se pudo extraer texto del documento'
+        details: 'El documento proporcionado no contiene texto reconocible'
       });
     }
 
@@ -235,7 +243,7 @@ app.post('/api/analyzeDocument', authenticateUser, upload.single('document'), as
       messages: [
         {
           role: 'system',
-          content: `Eres un asistente legal especializado en explicar documentos...`
+          content: `Eres un asistente legal especializado en explicar documentos legales en términos sencillos.`
         },
         {
           role: 'user',
@@ -246,6 +254,7 @@ app.post('/api/analyzeDocument', authenticateUser, upload.single('document'), as
       max_tokens: 2500
     });
 
+    // Guardar en Firestore
     await db.collection('documentAnalysis').add({
       userId: req.user.uid,
       fileName: req.file.originalname,
@@ -272,7 +281,7 @@ app.post('/api/analyzeDocument', authenticateUser, upload.single('document'), as
   }
 });
 
-/* ================== FIN NUEVA FUNCIONALIDAD ================== */
+/* ========================= FIN NUEVA FUNCIONALIDAD ========================= */
 
 // Rutas principales
 app.get('/', (req, res) => {
@@ -302,6 +311,7 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Iniciar servidor
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en puerto ${PORT}`);
