@@ -98,13 +98,6 @@
       gap: 15px;
     }
 
-    .main-options {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      margin-bottom: 30px;
-    }
-
     .option-item {
       display: flex;
       align-items: center;
@@ -113,38 +106,6 @@
       border-radius: 10px;
       cursor: pointer;
       transition: all 0.3s ease;
-    }
-
-    .option-item.active {
-      background: linear-gradient(145deg, var(--primary), var(--accent));
-      border: none;
-      color: white;
-    }
-
-    .option-item.active:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(44, 115, 210, 0.2);
-    }
-
-    .option-item.active .option-title,
-    .option-item.active .option-description {
-      color: white;
-    }
-
-    .option-item.document-option {
-      background: linear-gradient(145deg, #34495e, #2c3e50);
-      border: none;
-      color: white;
-    }
-
-    .option-item.document-option:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(52, 73, 94, 0.2);
-    }
-
-    .option-item.document-option .option-title,
-    .option-item.document-option .option-description {
-      color: white;
     }
 
     .option-item:hover {
@@ -195,6 +156,23 @@
       border-color: var(--border);
       background-color: white;
       transform: none;
+    }
+
+    .document-option {
+      background: linear-gradient(145deg, #34495e, #2c3e50);
+      border: none !important;
+      margin-top: 10px;
+      margin-bottom: 20px;
+    }
+
+    .document-option:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(52, 73, 94, 0.2);
+    }
+
+    .document-option .option-title,
+    .document-option .option-description {
+      color: white !important;
     }
 
     .loading {
@@ -262,240 +240,235 @@
   </style>
 </head>
 <body>
-  <div id="loading" class="loading">
-    <div class="loading-spinner"></div>
-  </div>
-
-  <header class="header">
-    <img src="/assets/logo.png" alt="DeudaZero Logo" class="logo">
-    <div class="user-info">
-      <span id="userName" class="user-name">Cargando...</span>
-      <button id="logoutButton" class="logout-btn">Cerrar sesión</button>
+    <div id="loading" class="loading">
+      <div class="loading-spinner"></div>
     </div>
-  </header>
-
-  <div class="container">
-    <h1 class="title">¿Qué tipo de ayuda necesitas?</h1>
+  
+    <header class="header">
+      <img src="/assets/logo.png" alt="DeudaZero Logo" class="logo">
+      <div class="user-info">
+        <span id="userName" class="user-name">Cargando...</span>
+        <button id="logoutButton" class="logout-btn">Cerrar sesión</button>
+      </div>
+    </header>
+  
+    <div class="container">
+      <h1 class="title">¿Qué tipo de ayuda necesitas?</h1>
+      
+      <div class="options-container">
+        <!-- ÚNICA opción activa -->
+        <label class="option-item" onclick="selectOption('deudas')">
+          <input type="radio" name="category" value="deudas">
+          <div class="option-icon">💰</div>
+          <div class="option-content">
+            <div class="option-title">Tengo problemas con deudas o bancos</div>
+            <div class="option-description">
+              Deudas bancarias, créditos, repactaciones, quiebra personal
+            </div>
+          </div>
+        </label>
+  
+        <!-- Nueva opción de Documentos -->
+        <label class="option-item document-option" onclick="window.location.href='/document-chat'">
+          <div class="option-icon">📄</div>
+          <div class="option-content">
+            <div class="option-title">Analizar Documentos</div>
+            <div class="option-description">
+              Sube contratos, resoluciones o documentos legales para recibir una explicación clara y simple
+            </div>
+          </div>
+        </label>
+  
+        <!-- El resto está 'inactive' y no hace nada al click -->
+        <label class="option-item inactive" onclick="optionInDevelopment()">
+          <input type="radio" name="category" value="familia">
+          <div class="option-icon">👨‍👩‍👧‍👦</div>
+          <div class="option-content">
+            <div class="option-title">
+              Tengo un problema familiar <small>(en desarrollo)</small>
+            </div>
+            <div class="option-description">
+              Divorcios, pensión de alimentos, custodia de hijos
+            </div>
+          </div>
+        </label>
+  
+        <label class="option-item inactive" onclick="optionInDevelopment()">
+          <input type="radio" name="category" value="laboral">
+          <div class="option-icon">💼</div>
+          <div class="option-content">
+            <div class="option-title">
+              Tengo problemas en mi trabajo <small>(en desarrollo)</small>
+            </div>
+            <div class="option-description">
+              Despidos, sueldos impagos, accidentes laborales
+            </div>
+          </div>
+        </label>
+  
+        <label class="option-item inactive" onclick="optionInDevelopment()">
+          <input type="radio" name="category" value="penal">
+          <div class="option-icon">⚖️</div>
+          <div class="option-content">
+            <div class="option-title">
+              Tengo problemas con la justicia <small>(en desarrollo)</small>
+            </div>
+            <div class="option-description">
+              Denuncias, estafas, problemas legales
+            </div>
+          </div>
+        </label>
+  
+        <label class="option-item inactive" onclick="optionInDevelopment()">
+          <input type="radio" name="category" value="tributario">
+          <div class="option-icon">📊</div>
+          <div class="option-content">
+            <div class="option-title">
+              Tengo problemas con impuestos <small>(en desarrollo)</small>
+            </div>
+            <div class="option-description">
+              SII, declaraciones, multas tributarias
+            </div>
+          </div>
+        </label>
+  
+        <label class="option-item inactive" onclick="optionInDevelopment()">
+          <input type="radio" name="category" value="municipal">
+          <div class="option-icon">🏛️</div>
+          <div class="option-content">
+            <div class="option-title">
+              Tengo problemas con la municipalidad <small>(en desarrollo)</small>
+            </div>
+            <div class="option-description">
+              Multas de tránsito, patentes, permisos
+            </div>
+          </div>
+        </label>
+  
+        <label class="option-item inactive" onclick="optionInDevelopment()">
+          <input type="radio" name="category" value="consumidor">
+          <div class="option-icon">🛒</div>
+          <div class="option-content">
+            <div class="option-title">
+              Tengo problemas con un producto o servicio <small>(en desarrollo)</small>
+            </div>
+            <div class="option-description">
+              Garantías, reclamos, devoluciones
+            </div>
+          </div>
+        </label>
+  
+        <label class="option-item inactive" onclick="optionInDevelopment()">
+          <input type="radio" name="category" value="medico">
+          <div class="option-icon">🏥</div>
+          <div class="option-content">
+            <div class="option-title">
+              Tengo problemas médicos <small>(en desarrollo)</small>
+            </div>
+            <div class="option-description">
+              Negligencias médicas, errores hospitalarios
+            </div>
+          </div>
+        </label>
+  
+        <label class="option-item inactive" onclick="optionInDevelopment()">
+          <input type="radio" name="category" value="arriendo">
+          <div class="option-icon">🏠</div>
+          <div class="option-content">
+            <div class="option-title">
+              Tengo problemas con un arriendo <small>(en desarrollo)</small>
+            </div>
+            <div class="option-description">
+              Contratos, desalojos, garantías
+            </div>
+          </div>
+        </label>
+      </div>
+    </div>
+    <script>
+        let auth;
+        let initializing = true;
     
-    <div class="main-options">
-      <!-- Opción de Chat - Activa -->
-      <label class="option-item active" onclick="selectOption('deudas')">
-        <input type="radio" name="category" value="deudas">
-        <div class="option-icon">💬</div>
-        <div class="option-content">
-          <div class="option-title">Consultar con el Asistente Legal</div>
-          <div class="option-description">
-            Deudas bancarias, créditos, repactaciones, quiebra personal
-          </div>
-        </div>
-      </label>
-
-      <!-- Nueva opción de Documentos -->
-      <label class="option-item document-option" onclick="window.location.href='/document-chat'">
-        <div class="option-icon">📄</div>
-        <div class="option-content">
-          <div class="option-title">Analizar Documentos</div>
-          <div class="option-description">
-            Sube contratos, resoluciones o documentos legales para recibir una explicación clara y simple
-          </div>
-        </div>
-      </label>
-    </div>
-
-    <div class="options-container">
-      <!-- Opciones inactivas -->
-      <label class="option-item inactive" onclick="optionInDevelopment()">
-        <input type="radio" name="category" value="familia">
-        <div class="option-icon">👨‍👩‍👧‍👦</div>
-        <div class="option-content">
-          <div class="option-title">
-            Tengo un problema familiar <small>(en desarrollo)</small>
-          </div>
-          <div class="option-description">
-            Divorcios, pensión de alimentos, custodia de hijos
-          </div>
-        </div>
-      </label>
-
-      <label class="option-item inactive" onclick="optionInDevelopment()">
-        <input type="radio" name="category" value="laboral">
-        <div class="option-icon">💼</div>
-        <div class="option-content">
-          <div class="option-title">
-            Tengo problemas en mi trabajo <small>(en desarrollo)</small>
-          </div>
-          <div class="option-description">
-            Despidos, sueldos impagos, accidentes laborales
-          </div>
-        </div>
-      </label>
-
-      <label class="option-item inactive" onclick="optionInDevelopment()">
-        <input type="radio" name="category" value="penal">
-        <div class="option-icon">⚖️</div>
-        <div class="option-content">
-          <div class="option-title">
-            Tengo problemas con la justicia <small>(en desarrollo)</small>
-          </div>
-          <div class="option-description">
-            Denuncias, estafas, problemas legales
-          </div>
-        </div>
-      </label>
-
-      <label class="option-item inactive" onclick="optionInDevelopment()">
-        <input type="radio" name="category" value="tributario">
-        <div class="option-icon">📊</div>
-        <div class="option-content">
-          <div class="option-title">
-            Tengo problemas con impuestos <small>(en desarrollo)</small>
-          </div>
-          <div class="option-description">
-            SII, declaraciones, multas tributarias
-          </div>
-        </div>
-      </label>
-
-      <label class="option-item inactive" onclick="optionInDevelopment()">
-        <input type="radio" name="category" value="municipal">
-        <div class="option-icon">🏛️</div>
-        <div class="option-content">
-          <div class="option-title">
-            Tengo problemas con la municipalidad <small>(en desarrollo)</small>
-          </div>
-          <div class="option-description">
-            Multas de tránsito, patentes, permisos
-          </div>
-        </div>
-      </label>
-
-      <label class="option-item inactive" onclick="optionInDevelopment()">
-        <input type="radio" name="category" value="consumidor">
-        <div class="option-icon">🛒</div>
-        <div class="option-content">
-          <div class="option-title">
-            Tengo problemas con un producto o servicio <small>(en desarrollo)</small>
-          </div>
-          <div class="option-description">
-            Garantías, reclamos, devoluciones
-          </div>
-        </div>
-      </label>
-
-      <label class="option-item inactive" onclick="optionInDevelopment()">
-        <input type="radio" name="category" value="medico">
-        <div class="option-icon">🏥</div>
-        <div class="option-content">
-          <div class="option-title">
-            Tengo problemas médicos <small>(en desarrollo)</small>
-          </div>
-          <div class="option-description">
-            Negligencias médicas, errores hospitalarios
-          </div>
-        </div>
-      </label>
-
-      <label class="option-item inactive" onclick="optionInDevelopment()">
-        <input type="radio" name="category" value="arriendo">
-        <div class="option-icon">🏠</div>
-        <div class="option-content">
-          <div class="option-title">
-            Tengo problemas con un arriendo <small>(en desarrollo)</small>
-          </div>
-          <div class="option-description">
-            Contratos, desalojos, garantías
-          </div>
-        </div>
-      </label>
-    </div>
-  </div>
-
-  <script>
-    let auth;
-    let initializing = true;
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyD242Qba3E-UgeA1UPXp9PgmjJK_Xg6VKY",
-      authDomain: "deudazero-b8e33.firebaseapp.com",
-      projectId: "deudazero-b8e33",
-      storageBucket: "deudazero-b8e33.firebasestorage.app",
-      messagingSenderId: "763390302400",
-      appId: "1:763390302400:web:6d9f294001f9af5731b525"
-    };
-
-    // Inicializar Firebase
-    try {
-      if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-      }
-      auth = firebase.auth();
-      console.log("Firebase inicializado correctamente");
-    } catch (error) {
-      console.error("Error al inicializar Firebase:", error);
-    }
-
-    // Verificar autenticación
-    auth.onAuthStateChanged((user) => {
-      if (!user) {
-        window.location.href = '/';
-        return;
-      }
-
-      const userName = document.getElementById('userName');
-      if (userName) {
-        userName.textContent = user.displayName || user.email || 'Usuario';
-      }
-      toggleLoading(false);
-    });
-
-    function toggleLoading(show) {
-      const loader = document.getElementById('loading');
-      if (loader) {
-        loader.style.display = show ? 'flex' : 'none';
-      }
-    }
-
-    function selectOption(category) {
-      console.log('Seleccionando categoría:', category);
-      
-      document.querySelectorAll('.option-item').forEach(item => {
-        item.classList.remove('selected');
-      });
-      
-      const selectedItem = document.querySelector(`[value="${category}"]`).closest('.option-item');
-      if (selectedItem) {
-        selectedItem.classList.add('selected');
-        
+        const firebaseConfig = {
+          apiKey: "AIzaSyD242Qba3E-UgeA1UPXp9PgmjJK_Xg6VKY",
+          authDomain: "deudazero-b8e33.firebaseapp.com",
+          projectId: "deudazero-b8e33",
+          storageBucket: "deudazero-b8e33.firebasestorage.app",
+          messagingSenderId: "763390302400",
+          appId: "1:763390302400:web:6d9f294001f9af5731b525"
+        };
+    
+        // Inicializar Firebase
         try {
-          sessionStorage.setItem('selectedCategory', category);
-          window.location.href = '/chat';
+          if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+          }
+          auth = firebase.auth();
+          console.log("Firebase inicializado correctamente");
         } catch (error) {
-          console.error
-        } catch (error) {
-          console.error('Error al redireccionar:', error);
-          toggleLoading(false);
+          console.error("Error al inicializar Firebase:", error);
         }
-      }
-    }
-
-    function optionInDevelopment() {
-      alert("Esta opción está en desarrollo. ¡Pronto estará disponible!");
-    }
-
-    document.getElementById('logoutButton').addEventListener('click', async () => {
-      toggleLoading(true);
-      try {
-        await auth.signOut();
-        window.location.href = '/';
-      } catch (error) {
-        console.error("Error al cerrar sesión:", error);
-        toggleLoading(false);
-      }
-    });
-
-    document.addEventListener('DOMContentLoaded', () => {
-      toggleLoading(true);
-    });
-  </script>
-</body>
-</html>  
+    
+        // Verificar autenticación
+        auth.onAuthStateChanged((user) => {
+          if (!user) {
+            window.location.href = '/';
+            return;
+          }
+    
+          const userName = document.getElementById('userName');
+          if (userName) {
+            userName.textContent = user.displayName || user.email || 'Usuario';
+          }
+          toggleLoading(false);
+        });
+    
+        function toggleLoading(show) {
+          const loader = document.getElementById('loading');
+          if (loader) {
+            loader.style.display = show ? 'flex' : 'none';
+          }
+        }
+    
+        function selectOption(category) {
+          console.log('Seleccionando categoría:', category);
+          
+          document.querySelectorAll('.option-item').forEach(item => {
+            item.classList.remove('selected');
+          });
+          
+          const selectedItem = document.querySelector(`[value="${category}"]`).closest('.option-item');
+          if (selectedItem) {
+            selectedItem.classList.add('selected');
+            
+            try {
+              sessionStorage.setItem('selectedCategory', category);
+              window.location.href = '/chat';
+            } catch (error) {
+              console.error('Error al redireccionar:', error);
+              toggleLoading(false);
+            }
+          }
+        }
+    
+        function optionInDevelopment() {
+          alert("Esta opción está en desarrollo. ¡Pronto estará disponible!");
+        }
+    
+        document.getElementById('logoutButton').addEventListener('click', async () => {
+          toggleLoading(true);
+          try {
+            await auth.signOut();
+            window.location.href = '/';
+          } catch (error) {
+            console.error("Error al cerrar sesión:", error);
+            toggleLoading(false);
+          }
+        });
+    
+        document.addEventListener('DOMContentLoaded', () => {
+          toggleLoading(true);
+        });
+      </script>
+    </body>
+    </html>

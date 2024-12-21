@@ -8,6 +8,12 @@ const path = require('path');
 const dotenv = require('dotenv');
 const OpenAI = require('openai');
 
+// NUEVAS DEPENDENCIAS para análisis de archivos
+const multer = require('multer');
+const Tesseract = require('tesseract.js');
+const PDFParser = require('pdf-parse');
+const sharp = require('sharp');
+
 dotenv.config();
 
 const app = express();
@@ -204,6 +210,130 @@ puede requerir la evaluación de un abogado.`;
   }
 });
 
+/* ========================= NUEVA FUNCIONALIDAD DE ANALIZAR DOCUMENTOS ========================= */
+
+// Configuración de multer para archivos (memoria)
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: undefined // Sin límite explícito
+  }
+});
+
+// Función para procesar diferentes tipos de archivos
+async function extractTextFromFile(file) {
+  const mimeType = file.mimetype;
+  let text = '';
+
+  try {
+    if (mimeType.startsWith('image/')) {
+      // Procesar imagen con Sharp y OCR con Tesseract
+      const optimizedBuffer = await sharp(file.buffer)
+        .resize(3000, 3000, { fit: 'inside' })
+        .normalize()
+        .sharpen()
+        .toBuffer();
+
+      const result = await Tesseract.recognize(optimizedBuffer, 'spa+eng', {
+        logger: m => console.log(m)
+      });
+      text = result.data.text;
+    } else if (mimeType === 'application/pdf') {
+      // Procesar PDF con pdf-parse
+      const pdfData = await PDFParser(file.buffer);
+      text = pdfData.text;
+    } else if (mimeType.startsWith('text/')) {
+      // Archivos de texto plano
+      text = file.buffer.toString('utf-8');
+    } else {
+      // Otros tipos (docx, etc.) -> se intenta leer como binario
+      text = file.buffer.toString('utf-8');
+    }
+
+    return text;
+  } catch (error) {
+    console.error('Error procesando archivo:', error);
+    throw error;
+  }
+}
+
+// Ruta para análisis de documentos
+app.post('/api/analyzeDocument', authenticateUser, upload.single('document'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        error: 'Documento no proporcionado',
+        details: 'Se requiere un archivo para analizar'
+      });
+    }
+
+    console.log(`Procesando documento: ${req.file.originalname} (${req.file.mimetype})`);
+    const documentText = await extractTextFromFile(req.file);
+
+    if (!documentText || documentText.trim().length === 0) {
+      return res.status(400).json({
+        error: 'No se pudo extraer texto',
+        details: 'No se pudo extraer texto del documento proporcionado'
+      });
+    }
+
+    const userQuery = req.body.query || "Por favor, explica este documento en términos simples.";
+
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4',
+      messages: [
+        {
+          role: 'system',
+          content: `Eres un asistente legal especializado en explicar documentos legales en términos simples. 
+                    Tu tarea es:
+                    1. Analizar el contenido del documento
+                    2. Identificar el tipo de documento (contrato, resolución, etc.)
+                    3. Explicar los puntos principales en lenguaje simple
+                    4. Resaltar cualquier término o cláusula importante
+                    5. Identificar plazos o fechas importantes si existen
+                    6. Explicar las obligaciones y derechos principales
+                    7. Responder específicamente a la consulta del usuario si la hay
+
+                    Usa un lenguaje claro y sencillo, evitando jerga legal cuando sea posible.
+                    Si encuentras términos técnicos, explícalos.
+                    Si hay algo crítico o que requiera atención inmediata, destácalo.`
+        },
+        {
+          role: 'user',
+          content: `Documento a analizar:\n\n${documentText}\n\nPregunta del usuario: ${userQuery}`
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 2500
+    });
+
+    // Guardar en Firestore
+    await db.collection('documentAnalysis').add({
+      userId: req.user.uid,
+      fileName: req.file.originalname,
+      fileType: req.file.mimetype,
+      fileSize: req.file.size,
+      query: userQuery,
+      response: completion.choices[0].message.content,
+      timestamp: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    return res.json({
+      response: completion.choices[0].message.content,
+      documentType: req.file.mimetype,
+      fileName: req.file.originalname
+    });
+  } catch (error) {
+    console.error('Error al analizar documento:', error);
+    return res.status(500).json({
+      error: 'Error al procesar el documento',
+      details: process.env.NODE_ENV === 'development' ? error.message : 'Error interno del servidor'
+    });
+  }
+});
+
+/* ================== FIN NUEVA FUNCIONALIDAD ================== */
+
 // 9. Rutas principales
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public/index.html'));
@@ -215,6 +345,11 @@ app.get('/menu', (req, res) => {
 
 app.get('/chat', (req, res) => {
   res.sendFile(path.join(__dirname, 'public/chat.html'));
+});
+
+// NUEVA RUTA para página "document-chat"
+app.get('/document-chat', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/document-chat.html'));
 });
 
 // 10. Manejo de errores global
