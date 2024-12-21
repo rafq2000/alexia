@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AbogadApp | Asistente Legal y Documentos</title>
+  <title>AbogadApp | Análisis de Documentos</title>
 
   <!-- Firebase SDKs (Compat) -->
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
@@ -408,7 +408,7 @@
       </div>
     </header>
 
-    <!-- Contenedor de Chat (Deudas, etc.) -->
+    <!-- Contenedor de Chat -->
     <div class="chat-container">
       <div id="chatMessages" class="chat-messages"></div>
       <div class="chat-input">
@@ -424,9 +424,14 @@
       </div>
     </div>
 
-    <!-- Contenedor para subir/documentos -->
+    <!-- Sección para Documentos -->
     <div class="document-container">
       <h2>Análisis de Documentos</h2>
+      <p style="color: var(--dark);">
+        ¡Hola! En esta sección puedes subir un archivo (contrato, resolución u otro documento) 
+        para que AbogadApp te ayude a interpretarlo y responda tus dudas específicas. 
+        Sólo dinos qué quieres saber y obtendrás una explicación clara y sencilla.
+      </p>
       <label class="file-upload-label">
         <div id="fileLabelText">Haz clic o arrastra un archivo aquí</div>
         <input type="file" id="fileInput" accept=".txt,.pdf,.png,.jpg,.jpeg,.doc,.docx" />
@@ -434,7 +439,7 @@
       <textarea
         id="queryInput"
         rows="2"
-        placeholder="¿Qué quieres saber sobre este documento? (opcional)"
+        placeholder="¿Cuál es tu duda principal sobre este documento?"
         style="width: 100%; padding: 10px; border: 2px solid var(--border); border-radius: 8px;"
       ></textarea>
       <div class="doc-actions">
@@ -451,23 +456,22 @@
   </div>
 
   <script>
-    //================= CHAT LÓGICA ===================
+    // ================ CHAT LÓGICA ===================
     let auth;
-    let selectedCategory;
     let isProcessing = false;
     let conversationHistory = [];
     let retryAttempts = 0;
     const MAX_RETRIES = 3;
     const RETRY_DELAY = 1000;
 
-    // Configuración de Firebase
+    // Config de Firebase
     const firebaseConfig = {
-      apiKey: "TU-APIKEY-FIREBASE",
-      authDomain: "TU-AUTHDOMAIN-FIREBASE",
-      projectId: "TU-PROYECTOID-FIREBASE",
-      storageBucket: "TU-STORAGE-FIREBASE",
+      apiKey: "TU_FIREBASE_API_KEY",
+      authDomain: "TU_FIREBASE_AUTH_DOMAIN",
+      projectId: "TU_FIREBASE_PROJECT_ID",
+      storageBucket: "TU_FIREBASE_STORAGE_BUCKET",
       messagingSenderId: "763390302400",
-      appId: "TU-APPID-FIREBASE"
+      appId: "TU_FIREBASE_APP_ID"
     };
 
     try {
@@ -481,17 +485,26 @@
     }
 
     auth.onAuthStateChanged(async (user) => {
+      // Verificamos login
       if (!user) {
+        // Si no hay usuario, redirigimos a la página principal
         window.location.href = '/';
         return;
       }
       document.getElementById('userName').textContent = user.displayName || user.email || 'Usuario';
 
-      selectedCategory = sessionStorage.getItem('selectedCategory') || 'deudas';
-      // Llamamos checkAPIConnection y Chat
       await checkAPIConnection();
-      initializeChat();
+      showIntroMessageForDocs(); // Mensaje de bienvenida especial
     });
+
+    // Muestra un mensaje inicial en el chat, indicando que es la sección de documentos
+    function showIntroMessageForDocs() {
+      const docIntro = `¡Bienvenido a la sección de Análisis de Documentos! 
+Aquí puedes subir tu archivo y te ayudaremos a interpretarlo. 
+También puedes usar el chat para preguntas legales generales.`;
+      addMessage(docIntro, 'assistant');
+      conversationHistory.push({ role: 'assistant', content: docIntro });
+    }
 
     async function checkAPIConnection() {
       try {
@@ -507,13 +520,13 @@
       }
     }
 
-    function initializeChat() {
-      const welcomeMessage = `Hola, veo que tienes consultas sobre problemas con deudas o bancos. 
-Por favor, responde estas preguntas para ayudarte mejor:
-
-¿Qué tipo de deuda tienes? (por ejemplo: bancaria, tarjeta de crédito, préstamo personal u otra)`;
-      addMessage(welcomeMessage, 'assistant');
-      conversationHistory.push({ role: 'assistant', content: welcomeMessage });
+    function addMessage(text, sender) {
+      const messagesDiv = document.getElementById('chatMessages');
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${sender}-message`;
+      messageDiv.innerHTML = `<div class="message-content">${text}</div>`;
+      messagesDiv.appendChild(messageDiv);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
 
     async function fetchWithTimeout(url, options, timeout = 8000) {
@@ -560,7 +573,7 @@ Por favor, responde estas preguntas para ayudarte mejor:
           },
           body: JSON.stringify({
             message,
-            category: selectedCategory,
+            category: 'documentos', // o algo genérico
             conversationHistory
           })
         });
@@ -614,88 +627,22 @@ Por favor, responde estas preguntas para ayudarte mejor:
       return typingDiv;
     }
 
-    async function saveMessageToFirestore(message, sender) {
+    async function saveMessageToFirestore(text, sender) {
       try {
         const user = auth.currentUser;
         if (!user) return;
         const db = firebase.firestore();
         await db.collection('chats').add({
           userId: user.uid,
-          message,
+          message: text,
           sender,
-          category: selectedCategory,
+          category: 'documentos',
           timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
       } catch (error) {
         console.error('Error al guardar mensaje:', error);
       }
     }
-
-    function addMessage(text, sender) {
-      const messagesDiv = document.getElementById('chatMessages');
-      const messageDiv = document.createElement('div');
-      messageDiv.className = `message ${sender}-message`;
-      messageDiv.innerHTML = `<div class="message-content">${text}</div>`;
-      messagesDiv.appendChild(messageDiv);
-      messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    }
-
-    function showConnectionStatus(message, type) {
-      const existingStatus = document.querySelector('.connection-status');
-      if (existingStatus) existingStatus.remove();
-
-      const statusDiv = document.createElement('div');
-      statusDiv.className = `connection-status ${type}`;
-      statusDiv.textContent = message;
-      document.body.appendChild(statusDiv);
-
-      setTimeout(() => {
-        statusDiv.style.animation = 'statusDisappear 0.3s forwards';
-        setTimeout(() => statusDiv.remove(), 300);
-      }, 3000);
-    }
-
-    const messageInput = document.getElementById('messageInput');
-    messageInput.addEventListener('input', function() {
-      this.style.height = '54px';
-      this.style.height = Math.min(this.scrollHeight, 150) + 'px';
-    });
-    messageInput.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage();
-      }
-    });
-    document.getElementById('sendButton').addEventListener('click', () => sendMessage());
-
-    document.getElementById('logoutButton').addEventListener('click', async () => {
-      try {
-        await auth.signOut();
-        window.location.href = '/';
-      } catch (error) {
-        console.error("Error al cerrar sesión:", error);
-        showConnectionStatus('Error al cerrar sesión', 'error');
-      }
-    });
-
-    function redirectToWhatsApp() {
-      const phoneNumber = '+56999999999';
-      const message = encodeURIComponent('Hola, necesito ayuda legal profesional sobre problemas con deudas o bancos. ¿Podría asesorarme?');
-      window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
-    }
-
-    window.addEventListener('online', () => {
-      showConnectionStatus('Conexión restaurada', 'success');
-    });
-    window.addEventListener('offline', () => {
-      showConnectionStatus('Sin conexión', 'error');
-    });
-    window.addEventListener('beforeunload', (e) => {
-      if (isProcessing || messageInput.value.trim()) {
-        e.preventDefault();
-        e.returnValue = '';
-      }
-    });
 
     //================= DOCUMENTOS LÓGICA ===================
     const fileInput = document.getElementById('fileInput');
@@ -705,7 +652,6 @@ Por favor, responde estas preguntas para ayudarte mejor:
     const docResult = document.getElementById('docResult');
     const queryInput = document.getElementById('queryInput');
 
-    // Detectar archivo seleccionado
     fileInput.addEventListener('change', () => {
       if (fileInput.files && fileInput.files[0]) {
         const fileName = fileInput.files[0].name;
@@ -723,7 +669,6 @@ Por favor, responde estas preguntas para ayudarte mejor:
       if (!fileInput.files || !fileInput.files[0]) return;
 
       try {
-        // Obtenemos token de Firebase
         const user = auth.currentUser;
         if (!user) {
           alert("Por favor inicia sesión primero");
@@ -750,6 +695,44 @@ Por favor, responde estas preguntas para ayudarte mejor:
       } catch (error) {
         console.error("Error al analizar documento:", error);
         alert('Error al procesar el documento.');
+      }
+    });
+
+    //=== BOTÓN DE ENVIAR MENSAJE ===
+    document.getElementById('sendButton').addEventListener('click', () => sendMessage());
+
+    //=== BOTÓN CERRAR SESIÓN ===
+    document.getElementById('logoutButton').addEventListener('click', async () => {
+      try {
+        await auth.signOut();
+        window.location.href = '/';
+      } catch (error) {
+        console.error("Error al cerrar sesión:", error);
+        showConnectionStatus('Error al cerrar sesión', 'error');
+      }
+    });
+
+    //=== BOTÓN WhatsApp ===
+    function redirectToWhatsApp() {
+      const phoneNumber = '+56999999999';
+      const message = encodeURIComponent('Hola, necesito ayuda legal profesional sobre un documento. ¿Podrías asesorarme?');
+      window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
+    }
+
+    //=== Estados de conexión ===
+    window.addEventListener('online', () => {
+      showConnectionStatus('Conexión restaurada', 'success');
+    });
+    window.addEventListener('offline', () => {
+      showConnectionStatus('Sin conexión', 'error');
+    });
+
+    //=== Prevenir cierre accidental ===
+    const messageInput = document.getElementById('messageInput');
+    window.addEventListener('beforeunload', (e) => {
+      if (isProcessing || messageInput.value.trim()) {
+        e.preventDefault();
+        e.returnValue = '';
       }
     });
   </script>
