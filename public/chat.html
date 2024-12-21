@@ -33,13 +33,11 @@
     }
 
     body {
-      /* NUEVO: fondo con gradiente sutil */
       background: linear-gradient(120deg, var(--background) 0%, #ffffff 100%);
       min-height: 100vh;
       padding: 20px;
       display: flex;
       flex-direction: column;
-      /* NUEVO: transición suave al cambiar el tamaño */
       transition: all 0.3s ease;
     }
 
@@ -68,17 +66,18 @@
       display: flex;
       align-items: center;
       gap: 15px;
-      cursor: pointer; /* NUEVO: para que el cursor cambie al pasar sobre la marca */
+      cursor: pointer;
     }
 
+    /* Aquí se referencia el logo */
     .logo {
       width: 50px;
       height: 50px;
       object-fit: contain;
-      transition: transform 0.2s ease; /* NUEVO: pequeña animación */
+      transition: transform 0.2s ease;
     }
     .logo:hover {
-      transform: scale(1.1); /* NUEVO: efecto hover en el logo */
+      transform: scale(1.1);
     }
 
     .brand-name {
@@ -166,7 +165,6 @@
       box-shadow: var(--message-shadow);
       transition: all 0.3s ease;
       position: relative;
-      /* NUEVO: efecto de fondo gradiente en hover */
     }
     .message-content:hover {
       transform: translateY(-1px);
@@ -297,7 +295,7 @@
       to { transform: translateY(0); opacity: 1; }
     }
 
-    /* NUEVO: Botón de WhatsApp (mismo estilo que tu otro código) */
+    /* Botón de WhatsApp */
     .whatsapp-button {
       position: fixed;
       bottom: 30px;
@@ -358,7 +356,7 @@
         height: 25px;
       }
       .logout-btn {
-        padding: 8px 15px; /* Ajuste para pantallas pequeñas */
+        padding: 8px 15px;
       }
     }
 
@@ -387,6 +385,7 @@
   <div class="main-container">
     <header class="app-header">
       <div class="brand" onclick="window.location.href='/menu'">
+        <!-- Logo AbogadApp -->
         <img src="/assets/logo.png" alt="AbogadApp" class="logo">
         <span class="brand-name">AbogadApp</span>
       </div>
@@ -404,7 +403,6 @@
           placeholder="Escribe tu mensaje aquí..."
           rows="1"></textarea>
         <button id="sendButton" class="send-btn">
-          <!-- Ícono en el botón de enviar -->
           <img src="/assets/send-icon.png" alt="Enviar" class="send-icon">
           Enviar
         </button>
@@ -412,7 +410,7 @@
     </div>
   </div>
 
-  <!-- NUEVO: Botón de WhatsApp -->
+  <!-- Botón de WhatsApp al final -->
   <div class="whatsapp-button" onclick="redirectToWhatsApp()">
     <img src="/assets/whatsapp-icon.png" alt="WhatsApp" class="whatsapp-icon">
   </div>
@@ -673,11 +671,10 @@
       }
     });
 
-    // NUEVO: función redirectToWhatsApp
     function redirectToWhatsApp() {
       const phoneNumber = '+56999999999';
-      const text = encodeURIComponent('Hola, necesito ayuda legal profesional sobre problemas con deudas o bancos. ¿Podría asesorarme?');
-      window.open(`https://wa.me/${phoneNumber}?text=${text}`, '_blank');
+      const message = encodeURIComponent('Hola, necesito ayuda legal profesional sobre problemas con deudas o bancos. ¿Podría asesorarme?');
+      window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
     }
 
     // Manejo de estado de conexión
