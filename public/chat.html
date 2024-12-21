@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="es">
-<!-- [Head section y estilos se mantienen igual que en la versión anterior] -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,94 +8,180 @@
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
 
     <style>
-        /* [Todos los estilos anteriores se mantienen igual] */
-        
-        /* Estilos adicionales para el cuestionario */
-        .questionnaire {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
         }
 
-        .question {
+        body {
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .logo-container {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            width: 200px;
+            margin-bottom: 10px;
+        }
+
+        .app-name {
+            color: #1a4f8a;
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        .chat-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .user-header {
+            padding: 10px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-name {
+            font-weight: bold;
+        }
+
+        .logout-btn {
+            padding: 5px 10px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .chat-messages {
+            height: calc(100vh - 300px);
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .message {
             margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message-content {
+            max-width: 80%;
+            padding: 10px 15px;
+            border-radius: 15px;
+            margin-bottom: 5px;
+        }
+
+        .user-message {
+            align-items: flex-end;
+        }
+
+        .assistant-message {
+            align-items: flex-start;
+        }
+
+        .user-message .message-content {
+            background: #007bff;
+            color: white;
+        }
+
+        .assistant-message .message-content {
+            background: #e9ecef;
+            color: black;
         }
 
         .options {
             display: flex;
             gap: 10px;
-            margin-top: 5px;
+            margin: 10px 0;
         }
 
         .option-btn {
             padding: 8px 16px;
-            background-color: var(--light);
-            border: 1px solid var(--border);
-            border-radius: 5px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 20px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s;
         }
 
         .option-btn:hover {
-            background-color: var(--accent);
+            background: #007bff;
             color: white;
         }
 
-        .option-btn.selected {
-            background-color: var(--accent);
-            color: white;
+        .chat-input {
+            padding: 20px;
+            border-top: 1px solid #dee2e6;
+            display: flex;
+            gap: 10px;
         }
 
-        .submit-questionnaire {
-            padding: 10px 20px;
-            background-color: var(--accent);
+        .chat-input textarea {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            resize: none;
+            height: 40px;
+        }
+
+        .send-btn {
+            padding: 0 20px;
+            background: #007bff;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            margin-top: 15px;
         }
 
-        .submit-questionnaire:hover {
-            background-color: var(--primary);
+        .send-btn:disabled {
+            background: #cccccc;
         }
     </style>
 </head>
 <body>
-    <!-- [Header section se mantiene igual] -->
-    <header class="header">
-        <img src="/assets/logo.png" alt="AbogadApp Logo" class="logo" onclick="window.location.href='/menu'">
-        <div class="user-info">
+    <div class="logo-container">
+        <img src="/assets/logo.png" alt="AbogadApp Logo" class="logo">
+        <div class="app-name">AbogadApp</div>
+    </div>
+
+    <div class="chat-container">
+        <div class="user-header">
             <span id="userName" class="user-name">Usuario</span>
             <button id="logoutButton" class="logout-btn">Cerrar sesión</button>
         </div>
-    </header>
 
-    <div class="chat-container">
         <div id="chatMessages" class="chat-messages"></div>
         
         <div class="chat-input">
             <textarea 
                 id="messageInput" 
-                placeholder="Escribe tu mensaje aquí..."
-                rows="1"></textarea>
+                placeholder="Escribe tu mensaje aquí..."></textarea>
             <button id="sendButton" class="send-btn">Enviar</button>
         </div>
-    </div>
-
-    <div class="whatsapp-button" onclick="redirectToWhatsApp()">
-        <img src="/assets/whatsapp-icon.png" alt="WhatsApp" class="whatsapp-icon">
     </div>
 
     <script>
         let auth;
         let selectedCategory;
         let isProcessing = false;
-        let questionnaireCompleted = false;
 
         // Configuración de Firebase
         const firebaseConfig = {
@@ -110,29 +195,22 @@
 
         // Inicializar Firebase
         try {
-            if (!firebase.apps.length) {
-                firebase.initializeApp(firebaseConfig);
-            }
+            firebase.initializeApp(firebaseConfig);
             auth = firebase.auth();
-            console.log("Firebase inicializado correctamente");
         } catch (error) {
             console.error("Error al inicializar Firebase:", error);
-            showError("Error al inicializar la aplicación");
         }
 
         // Verificar autenticación
-        auth.onAuthStateChanged(async (user) => {
+        auth.onAuthStateChanged((user) => {
             if (!user) {
                 window.location.href = '/';
                 return;
             }
 
-            const userName = document.getElementById('userName');
-            if (userName) {
-                userName.textContent = user.displayName || user.email || 'Usuario';
-            }
-
+            document.getElementById('userName').textContent = user.displayName || user.email || 'Usuario';
             selectedCategory = sessionStorage.getItem('selectedCategory');
+            
             if (!selectedCategory) {
                 window.location.href = '/menu';
                 return;
@@ -141,131 +219,10 @@
             initializeChat();
         });
 
-        function showError(message) {
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'error-message';
-            errorDiv.textContent = message;
-            document.body.insertBefore(errorDiv, document.body.firstChild);
-            setTimeout(() => errorDiv.remove(), 5000);
-        }
-
         function initializeChat() {
             const welcomeMessage = `Hola, veo que tienes consultas sobre ${getCategoryName(selectedCategory)}. ¿Te gustaría realizar un breve cuestionario para ayudarte mejor o prefieres hacer tu consulta directamente?`;
             addMessage(welcomeMessage, 'assistant');
-            addOptionsButtons(['Realizar cuestionario', 'Hacer consulta directamente']);
-        }
-
-        function addOptionsButtons(options) {
-            const messagesDiv = document.getElementById('chatMessages');
-            const buttonsDiv = document.createElement('div');
-            buttonsDiv.className = 'options';
-            
-            options.forEach(option => {
-                const button = document.createElement('button');
-                button.className = 'option-btn';
-                button.textContent = option;
-                button.onclick = () => handleOptionSelection(option);
-                buttonsDiv.appendChild(button);
-            });
-            
-            messagesDiv.appendChild(buttonsDiv);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        }
-
-        function handleOptionSelection(option) {
-            if (option === 'Realizar cuestionario') {
-                startQuestionnaire();
-            } else {
-                addMessage('De acuerdo, ¿en qué puedo ayudarte?', 'assistant');
-                questionnaireCompleted = true;
-            }
-            
-            // Remover los botones de opciones
-            const optionsDiv = document.querySelector('.options');
-            if (optionsDiv) {
-                optionsDiv.remove();
-            }
-        }
-
-        function startQuestionnaire() {
-            const questions = getQuestionsByCategory(selectedCategory);
-            showQuestion(questions, 0);
-        }
-
-        function getQuestionsByCategory(category) {
-            const questionSets = {
-                'deudas': [
-                    {
-                        question: '¿Qué tipo de deuda tienes?',
-                        options: ['Bancaria', 'Tarjeta de crédito', 'Préstamo personal', 'Otra']
-                    },
-                    {
-                        question: '¿Hace cuánto tiempo está vencida la deuda?',
-                        options: ['Menos de 30 días', '30-90 días', 'Más de 90 días', 'No está vencida']
-                    },
-                    {
-                        question: '¿Has recibido notificaciones legales?',
-                        options: ['Sí', 'No', 'No estoy seguro']
-                    }
-                ],
-                'laboral': [
-                    {
-                        question: '¿Cuál es tu situación laboral actual?',
-                        options: ['Empleado', 'Despedido', 'En proceso de despido', 'Otro']
-                    },
-                    {
-                        question: '¿Tienes contrato formal?',
-                        options: ['Sí', 'No', 'Término fijo', 'Indefinido']
-                    },
-                    {
-                        question: '¿Has tenido problemas con pagos o beneficios?',
-                        options: ['Sí', 'No', 'En proceso']
-                    }
-                ],
-                // Añadir más categorías según sea necesario
-            };
-            
-            return questionSets[category] || [];
-        }
-
-        function showQuestion(questions, index) {
-            if (index >= questions.length) {
-                finishQuestionnaire();
-                return;
-            }
-
-            const questionnaire = document.createElement('div');
-            questionnaire.className = 'questionnaire';
-            
-            const question = document.createElement('div');
-            question.className = 'question';
-            question.textContent = questions[index].question;
-            
-            const options = document.createElement('div');
-            options.className = 'options';
-            
-            questions[index].options.forEach(option => {
-                const button = document.createElement('button');
-                button.className = 'option-btn';
-                button.textContent = option;
-                button.onclick = () => {
-                    addMessage(questions[index].question, 'assistant');
-                    addMessage(option, 'user');
-                    questionnaire.remove();
-                    showQuestion(questions, index + 1);
-                };
-                options.appendChild(button);
-            });
-            
-            questionnaire.appendChild(question);
-            questionnaire.appendChild(options);
-            
-            document.getElementById('chatMessages').appendChild(questionnaire);
-        }
-
-        function finishQuestionnaire() {
-            questionnaireCompleted = true;
-            addMessage('Gracias por completar el cuestionario. Ahora puedo ayudarte mejor. ¿Cuál es tu consulta específica?', 'assistant');
+            addOptions(['Realizar cuestionario', 'Hacer consulta directamente']);
         }
 
         function getCategoryName(category) {
@@ -283,6 +240,44 @@
             return categories[category] || 'consultas generales';
         }
 
+        function addMessage(text, sender) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+            messageDiv.innerHTML = `<div class="message-content">${text}</div>`;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function addOptions(options) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const optionsDiv = document.createElement('div');
+            optionsDiv.className = 'options';
+            
+            options.forEach(option => {
+                const button = document.createElement('button');
+                button.className = 'option-btn';
+                button.textContent = option;
+                button.onclick = () => handleOptionSelection(option);
+                optionsDiv.appendChild(button);
+            });
+            
+            messagesDiv.appendChild(optionsDiv);
+        }
+
+        function handleOptionSelection(option) {
+            const optionsDiv = document.querySelector('.options');
+            if (optionsDiv) optionsDiv.remove();
+
+            addMessage(option, 'user');
+            
+            if (option === 'Realizar cuestionario') {
+                startQuestionnaire();
+            } else {
+                addMessage('¿En qué puedo ayudarte?', 'assistant');
+            }
+        }
+
         async function sendMessage() {
             if (isProcessing) return;
 
@@ -293,22 +288,10 @@
             
             isProcessing = true;
             input.disabled = true;
-            const sendButton = document.getElementById('sendButton');
-            sendButton.disabled = true;
+            document.getElementById('sendButton').disabled = true;
             
             input.value = '';
-            input.style.height = '45px';
             addMessage(message, 'user');
-
-            const thinkingDiv = document.createElement('div');
-            thinkingDiv.className = 'thinking';
-            thinkingDiv.innerHTML = `
-                <div class="thinking-dots">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </div>`;
-            document.getElementById('chatMessages').appendChild(thinkingDiv);
 
             try {
                 const token = await auth.currentUser.getIdToken();
@@ -320,107 +303,29 @@
                     },
                     body: JSON.stringify({
                         message,
-                        category: selectedCategory,
-                        questionnaireCompleted
+                        category: selectedCategory
                     })
                 });
 
-                thinkingDiv.remove();
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || 'Error en el servidor');
-                }
+                if (!response.ok) throw new Error('Error en el servidor');
 
                 const data = await response.json();
                 if (data.response) {
                     addMessage(data.response, 'assistant');
-                    saveMessageToFirestore(message, 'user');
-                    saveMessageToFirestore(data.response, 'assistant');
-                } else {
-                    throw new Error('Respuesta vacía del servidor');
                 }
             } catch (error) {
-                console.error('Error en chat:', error);
-                thinkingDiv?.remove();
-                showError('Error al enviar el mensaje. Por favor, intenta nuevamente.');
+                console.error('Error:', error);
                 addMessage('Lo siento, ha ocurrido un error. Por favor, intenta nuevamente.', 'assistant');
             } finally {
                 isProcessing = false;
                 input.disabled = false;
-                sendButton.disabled = false;
+                document.getElementById('sendButton').disabled = false;
                 input.focus();
             }
         }
 
-        function addMessage(text, sender) {
-            const messagesDiv = document.getElementById('chatMessages');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${sender}-message`;
-            
-            const processedText = text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
-            
-            messageDiv.innerHTML = `<div class="message-content">${processedText}</div>`;
-            messagesDiv.appendChild(messageDiv);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        }
-
-        async function saveMessageToFirestore(message, sender) {
-            try {
-                const user = auth.currentUser;
-                if (!user) return;
-
-                const db = firebase.firestore();
-                await db.collection('chats').add({
-                    userId: user.uid,
-                    message: message,
-                    sender: sender,
-                    category: selectedCategory,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
-            } catch (error) {
-                console.error('Error al guardar mensaje:', error);
-            }
-        }
-
-        async function loadChatHistory() {
-            try {
-                const user = auth.currentUser;
-                if (!user) return;
-
-                const db = firebase.firestore();
-                const chatRef = db.collection('chats')
-                    .where('userId', '==', user.uid)
-                    .where('category', '==', selectedCategory)
-                    .orderBy('timestamp', 'asc')
-                    .limit(50);
-
-                const snapshot = await chatRef.get();
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    addMessage(data.message, data.sender);
-                });
-            } catch (error) {
-                console.error('Error al cargar historial:', error);
-                showError('Error al cargar el historial del chat');
-            }
-        }
-
-        function redirectToWhatsApp() {
-            const phoneNumber = '+56912345678'; // Reemplazar con el número real
-            const message = encodeURIComponent('Hola, necesito ayuda legal sobre ' + getCategoryName(selectedCategory));
-            window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
-        }
-
-        // Event listeners
-        const messageInput = document.getElementById('messageInput');
-        
-        messageInput.addEventListener('input', function() {
-            this.style.height = '45px';
-            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
-        });
-
-        messageInput.addEventListener('keydown', function(e) {
+        // Event Listeners
+        document.getElementById('messageInput').addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 sendMessage();
@@ -435,74 +340,36 @@
                 window.location.href = '/';
             } catch (error) {
                 console.error("Error al cerrar sesión:", error);
-                showError("Error al cerrar sesión");
             }
         });
 
-        // Manejo de estado de conexión
-        window.addEventListener('online', () => {
-            document.getElementById('sendButton').disabled = false;
-            const errorDiv = document.querySelector('.error-message');
-            if (errorDiv && errorDiv.textContent.includes('conexión')) {
-                errorDiv.remove();
-            }
-        });
+        function startQuestionnaire() {
+            // Aquí puedes implementar el cuestionario específico para cada categoría
+            const questions = {
+                deudas: [
+                    '¿Qué tipo de deuda tienes?',
+                    '¿Hace cuánto tiempo está vencida?',
+                    '¿Has recibido notificaciones legales?'
+                ]
+                // Añadir más categorías según necesites
+            };
 
-        window.addEventListener('offline', () => {
-            document.getElementById('sendButton').disabled = true;
-            showError('Sin conexión a Internet');
-        });
-
-        // Prevenir cierre accidental
-        window.addEventListener('beforeunload', (e) => {
-            const input = document.getElementById('messageInput');
-            if (input.value.trim()) {
-                e.preventDefault();
-                e.returnValue = '';
-            }
-        });
-
-        // Manejo de archivos adjuntos (preparado para futura implementación)
-        let fileInput;
-
-        function setupFileUpload() {
-            fileInput = document.createElement('input');
-            fileInput.type = 'file';
-            fileInput.accept = '.pdf,.doc,.docx,.jpg,.jpeg,.png';
-            fileInput.style.display = 'none';
-            fileInput.addEventListener('change', handleFileUpload);
-            document.body.appendChild(fileInput);
-        }
-
-        async function handleFileUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            try {
-                // Aquí iría la lógica para subir el archivo
-                addMessage(`Archivo seleccionado: ${file.name}`, 'user');
-            } catch (error) {
-                console.error('Error al subir archivo:', error);
-                showError('Error al subir el archivo');
+            if (questions[selectedCategory]) {
+                askQuestion(questions[selectedCategory], 0);
+            } else {
+                addMessage('¿En qué puedo ayudarte?', 'assistant');
             }
         }
 
-        // Inicialización del chat
-        function initializeComponents() {
-            setupFileUpload();
-            
-            // Verificar si hay historial de chat
-            if (auth.currentUser) {
-                loadChatHistory().then(() => {
-                    if (!questionnaireCompleted) {
-                        initializeChat();
-                    }
-                });
+        function askQuestion(questions, index) {
+            if (index >= questions.length) {
+                addMessage('Gracias por responder. ¿En qué puedo ayudarte específicamente?', 'assistant');
+                return;
             }
-        }
 
-        // Llamar a la inicialización cuando el DOM esté listo
-        document.addEventListener('DOMContentLoaded', initializeComponents);
+            addMessage(questions[index], 'assistant');
+            // El usuario puede responder normalmente a través del input
+        }
     </script>
 </body>
 </html>
