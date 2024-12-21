@@ -17,8 +17,9 @@
   "devDependencies": {
     "nodemon": "^3.1.9"
   },
+  // Cambia aquí para forzar Node 18
   "engines": {
-    "node": ">=18.0.0"
+    "node": "18.x"
   },
   "author": "",
   "license": "ISC",
