@@ -28,7 +28,7 @@ try {
   process.exit(1);
 }
 
-// 2. Configuración de multer para archivos
+// 2. Configuración de multer para archivos (20MB máximo)
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
@@ -47,39 +47,38 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
-// 5. Función para extraer texto de archivos
+// ======================
+// FUNCIÓN ACTUALIZADA #5
+// ======================
 async function extractTextFromFile(file) {
-  const mimeType = file.mimetype;
-  let text = '';
-
   try {
-    if (mimeType.startsWith('image/')) {
+    console.log('Procesando archivo:', file.originalname, file.mimetype);
+
+    if (file.mimetype.startsWith('image/')) {
+      console.log('Procesando imagen con OCR');
       const optimizedBuffer = await sharp(file.buffer)
-        .resize(3000, 3000, { fit: 'inside' })
+        .resize(2000, 2000, { fit: 'inside' })
         .normalize()
         .sharpen()
         .toBuffer();
 
       const result = await Tesseract.recognize(optimizedBuffer, 'spa+eng', {
-        logger: m => console.log(m)
+        logger: m => console.log('Tesseract:', m)
       });
-      text = result.data.text;
-    } 
-    else if (mimeType === 'application/pdf') {
-      const pdfData = await PDFParser(file.buffer);
-      text = pdfData.text;
-    } 
-    else if (mimeType.startsWith('text/')) {
-      text = file.buffer.toString('utf-8');
-    }
-    else {
-      text = file.buffer.toString('utf-8');
-    }
+      return result.data.text;
 
-    return text.trim();
+    } else if (file.mimetype === 'application/pdf') {
+      console.log('Procesando PDF');
+      const pdfData = await PDFParser(file.buffer);
+      return pdfData.text;
+
+    } else {
+      console.log('Procesando como texto plano');
+      return file.buffer.toString('utf-8');
+    }
   } catch (error) {
     console.error('Error procesando archivo:', error);
-    throw error;
+    throw new Error(`Error procesando ${file.originalname}: ${error.message}`);
   }
 }
 
@@ -168,8 +167,9 @@ app.post('/api/chatWithAI', authenticateUser, async (req, res) => {
 
     const responseContent = completion.choices[0].message.content;
 
+    // Guardar en Firestore
     try {
-      await db.collection('chats').add({
+      await admin.firestore().collection('chats').add({
         userId: req.user.uid,
         category,
         message,
@@ -177,7 +177,7 @@ app.post('/api/chatWithAI', authenticateUser, async (req, res) => {
         timestamp: admin.firestore.FieldValue.serverTimestamp()
       });
 
-      await db.collection('stats').doc('global').set({
+      await admin.firestore().collection('stats').doc('global').set({
         totalConsultas: admin.firestore.FieldValue.increment(1),
         ultimaActualizacion: admin.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
@@ -198,88 +198,76 @@ app.post('/api/chatWithAI', authenticateUser, async (req, res) => {
   }
 });
 
-// Ruta para análisis de documentos
+// ==========================
+// RUTA ACTUALIZADA Documentos
+// ==========================
 app.post('/api/analyzeDocument', authenticateUser, upload.array('document'), async (req, res) => {
   try {
+    console.log('Iniciando análisis de documentos');
+    
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({
-        error: 'Documento no proporcionado',
-        details: 'Se requiere al menos un archivo para analizar'
+        error: 'No se proporcionaron documentos',
+        details: 'Por favor, selecciona al menos un archivo'
       });
     }
 
-    console.log(`Procesando ${req.files.length} documento(s)`);
     let allText = '';
-
     for (const file of req.files) {
-      console.log(`Procesando: ${file.originalname} (${file.mimetype})`);
       try {
-        const documentText = await extractTextFromFile(file);
-        if (documentText && documentText.trim()) {
-          allText += `\n\n=== Contenido de ${file.originalname} ===\n${documentText}`;
+        const text = await extractTextFromFile(file);
+        if (text && text.trim()) {
+          allText += `\n--- ${file.originalname} ---\n${text.trim()}\n`;
         }
       } catch (error) {
-        console.error(`Error procesando archivo ${file.originalname}:`, error);
+        console.error(`Error procesando ${file.originalname}:`, error);
       }
     }
 
     if (!allText.trim()) {
       return res.status(400).json({
         error: 'No se pudo extraer texto',
-        details: 'No se pudo extraer texto legible de los documentos proporcionados'
+        details: 'No se pudo extraer texto legible de los documentos'
       });
     }
 
-    const userQuery = req.body.query || "Por favor, explica este documento en términos simples.";
+    console.log('Texto extraído, enviando a OpenAI');
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4',
       messages: [
         {
           role: 'system',
-          content: `Eres un asistente legal especializado en explicar documentos legales en términos sencillos.
-                   Tu tarea es:
-                   1. Analizar el contenido proporcionado
-                   2. Explicar en lenguaje simple y claro los puntos principales
-                   3. Identificar fechas o plazos importantes
-                   4. Explicar términos legales de forma comprensible
-                   5. Responder específicamente a la consulta del usuario
-
-                   Al final de CADA respuesta, incluye SIEMPRE este mensaje:
-                   "NOTA IMPORTANTE: Para recibir asesoría legal personalizada sobre este documento, 
-                   te recomiendo consultar con uno de nuestros abogados especialistas. 
-                   Haz clic en el ícono de WhatsApp para contactar a un profesional ahora mismo."`
+          content: `Eres un asistente legal especializado en explicar documentos en términos simples.
+                   Analiza el texto proporcionado y:
+                   1. Identifica el tipo de documento
+                   2. Explica su contenido en términos simples
+                   3. Destaca puntos importantes
+                   4. Menciona fechas o plazos relevantes
+                   
+                   Termina SIEMPRE con:
+                   "Para recibir asesoría legal personalizada sobre este documento, haz clic en el ícono de WhatsApp para contactar a un abogado especialista."`
         },
         {
           role: 'user',
-          content: `Documentos a analizar:\n${allText}\n\nConsulta específica: ${userQuery}`
+          content: `Analiza este texto:\n${allText}`
         }
       ],
       temperature: 0.7,
-      max_tokens: 2500
+      max_tokens: 2000
     });
 
-    await db.collection('documentAnalysis').add({
-      userId: req.user.uid,
-      files: req.files.map(f => ({
-        fileName: f.originalname,
-        fileType: f.mimetype,
-        fileSize: f.size
-      })),
-      query: userQuery,
-      response: completion.choices[0].message.content,
-      timestamp: admin.firestore.FieldValue.serverTimestamp()
-    });
+    console.log('Respuesta recibida de OpenAI');
 
     return res.json({
-      response: completion.choices[0].message.content,
-      filesProcessed: req.files.map(f => f.originalname)
+      response: completion.choices[0].message.content
     });
+
   } catch (error) {
-    console.error('Error al analizar documentos:', error);
+    console.error('Error en análisis:', error);
     return res.status(500).json({
       error: 'Error al procesar los documentos',
-      details: process.env.NODE_ENV === 'development' ? error.message : 'Error interno del servidor'
+      details: error.message
     });
   }
 });

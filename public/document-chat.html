@@ -253,11 +253,9 @@
       body {
         padding: 10px;
       }
-
       .container {
         padding: 20px;
       }
-
       .header {
         flex-direction: column;
         gap: 15px;
@@ -267,6 +265,7 @@
   </style>
 </head>
 <body>
+  <!-- Encabezado -->
   <header class="header">
     <div class="brand" onclick="window.location.href='/menu'">
       <img src="/assets/logo.png" alt="AbogadApp" class="logo">
@@ -278,6 +277,7 @@
     </div>
   </header>
 
+  <!-- Contenedor principal -->
   <div class="container">
     <h1 class="title">Análisis de Documentos</h1>
     <p class="description">
@@ -285,6 +285,7 @@
       AbogadApp te ayudará a interpretarlos y explicarlos en términos simples.
     </p>
 
+    <!-- Botón para seleccionar archivos -->
     <div class="file-upload">
       <button class="select-files-btn" onclick="document.getElementById('fileInput').click()">
         Seleccionar Archivos
@@ -298,18 +299,22 @@
       >
     </div>
 
+    <!-- Lista de archivos seleccionados -->
     <div id="fileList" class="file-list"></div>
 
+    <!-- Textarea para la consulta -->
     <textarea
       id="queryInput"
       class="query-input"
       placeholder="¿Qué necesitas saber sobre estos documentos?"
     ></textarea>
 
+    <!-- Botón para analizar -->
     <button id="analyzeBtn" class="analyze-btn" disabled>
       Analizar Documentos
     </button>
 
+    <!-- Contenedor de resultados -->
     <div id="resultContainer" class="result-container">
       <div id="loadingSpinner" class="loading-spinner">
         <div class="spinner"></div>
@@ -319,6 +324,7 @@
     </div>
   </div>
 
+  <!-- Botón WhatsApp -->
   <div class="whatsapp-button" onclick="redirectToWhatsApp()">
     <img src="/assets/whatsapp-icon.png" alt="WhatsApp" class="whatsapp-icon">
   </div>
@@ -333,13 +339,12 @@
       messagingSenderId: "763390302400",
       appId: "1:763390302400:web:6d9f294001f9af5731b525"
     };
-
     if (!firebase.apps.length) {
       firebase.initializeApp(firebaseConfig);
     }
     const auth = firebase.auth();
 
-    // Auth Check
+    // Chequeo de autenticación
     auth.onAuthStateChanged(user => {
       if (!user) {
         window.location.href = '/';
@@ -348,7 +353,7 @@
       document.getElementById('userName').textContent = user.displayName || user.email || 'Usuario';
     });
 
-    // File Handling
+    // Elementos del DOM
     const fileInput = document.getElementById('fileInput');
     const analyzeBtn = document.getElementById('analyzeBtn');
     const fileList = document.getElementById('fileList');
@@ -356,6 +361,7 @@
     const loadingSpinner = document.getElementById('loadingSpinner');
     const analysisResult = document.getElementById('analysisResult');
 
+    // Mostrar archivos seleccionados
     fileInput.addEventListener('change', function(e) {
       if (e.target.files.length > 0) {
         analyzeBtn.disabled = false;
@@ -393,31 +399,36 @@
       resultContainer.style.display = 'none';
     }
 
+    // Lógica mejorada al hacer clic en "Analizar Documentos"
     analyzeBtn.addEventListener('click', async function() {
       if (!fileInput.files.length) return;
 
       try {
+        // Mostrar spinner y desactivar botón
         resultContainer.style.display = 'block';
         loadingSpinner.style.display = 'block';
         analysisResult.style.display = 'none';
         analyzeBtn.disabled = true;
+        analyzeBtn.textContent = 'Analizando...';
 
+        // Verificar usuario
         const user = auth.currentUser;
         if (!user) {
-          alert('Por favor inicia sesión para continuar');
-          return;
+          throw new Error('Por favor inicia sesión para continuar');
         }
-
         const token = await user.getIdToken();
-        const formData = new FormData();
 
+        // Preparar formData
+        const formData = new FormData();
         Array.from(fileInput.files).forEach(file => {
           formData.append('document', file);
         });
-
         const queryInput = document.getElementById('queryInput');
-        formData.append('query', queryInput.value || 'Por favor, explica estos documentos');
+        if (queryInput.value.trim()) {
+          formData.append('query', queryInput.value);
+        }
 
+        console.log('Enviando documentos para análisis...');
         const response = await fetch('/api/analyzeDocument', {
           method: 'POST',
           headers: {
@@ -428,25 +439,28 @@
 
         const result = await response.json();
 
-        if (response.ok) {
-          loadingSpinner.style.display = 'none';
-          analysisResult.style.display = 'block';
-          analysisResult.innerHTML = `<p style="white-space: pre-wrap;">${result.response}</p>`;
-          analysisResult.scrollIntoView({ behavior: 'smooth' });
-        } else {
-          throw new Error(result.error || 'Error al analizar documentos');
+        if (!response.ok) {
+          throw new Error(result.error || result.details || 'Error al procesar los documentos');
         }
+
+        // Ocultar spinner, mostrar resultado
+        loadingSpinner.style.display = 'none';
+        analysisResult.style.display = 'block';
+        analysisResult.innerHTML = `<div style="white-space: pre-wrap;">${result.response}</div>`;
+        analysisResult.scrollIntoView({ behavior: 'smooth' });
+
       } catch (error) {
         console.error('Error:', error);
         loadingSpinner.style.display = 'none';
         analysisResult.style.display = 'block';
         analysisResult.innerHTML = `
           <div class="error-message">
-            Error: ${error.message || 'Error al procesar los documentos'}
+            ${error.message || 'Error al procesar los documentos'}
           </div>
         `;
       } finally {
         analyzeBtn.disabled = false;
+        analyzeBtn.textContent = 'Analizar Documentos';
       }
     });
 
