@@ -1,98 +1,757 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Análisis de Documentos - AbogadApp</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AbogadApp | Asistente Legal y Documentos</title>
+
+  <!-- Firebase SDKs (Compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+
+  <style>
+    :root {
+      --primary: #1a4f8a;
+      --secondary: #45b69c;
+      --accent: #2c73d2;
+      --background: #f0f9ff;
+      --error: #dc3545;
+      --success: #28a745;
+      --dark: #333;
+      --light: #f8f9fa;
+      --border: #dee2e6;
+      --message-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      --hover-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(120deg, var(--background) 0%, #ffffff 100%);
+      min-height: 100vh;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      transition: all 0.3s ease;
+    }
+
+    .main-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Encabezado */
+    .app-header {
+      background: white;
+      padding: 15px 30px;
+      border-radius: 15px;
+      box-shadow: var(--message-shadow);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: 1px solid rgba(0,0,0,0.05);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      cursor: pointer;
+    }
+    .logo {
+      width: 50px;
+      height: 50px;
+      object-fit: contain;
+      transition: transform 0.2s ease;
+    }
+    .logo:hover {
+      transform: scale(1.1);
+    }
+    .brand-name {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--primary);
+      letter-spacing: -0.5px;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .user-name {
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--dark);
+    }
+    .logout-btn {
+      padding: 10px 20px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 500;
+      font-size: 14px;
+    }
+    .logout-btn:hover {
+      background: var(--primary);
+      transform: translateY(-1px);
+      box-shadow: var(--message-shadow);
+    }
+
+    /* Chat Container */
+    .chat-container {
+      background: white;
+      border-radius: 15px;
+      box-shadow: var(--message-shadow);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border: 1px solid rgba(0,0,0,0.05);
+      position: relative;
+    }
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 30px;
+      scroll-behavior: smooth;
+    }
+    .message {
+      margin-bottom: 25px;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: messageAppear 0.3s forwards;
+    }
+    @keyframes messageAppear {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .message.user-message { margin-left: auto; max-width: 80%; }
+    .message.assistant-message { margin-right: auto; max-width: 80%; }
+
+    .message-content {
+      padding: 15px 20px;
+      border-radius: 15px;
+      box-shadow: var(--message-shadow);
+      transition: all 0.3s ease;
+      position: relative;
+    }
+    .message-content:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--hover-shadow);
+      background: linear-gradient(120deg, rgba(255,255,255,0.8), rgba(255,255,255,0.9));
+    }
+    .user-message .message-content {
+      background: var(--accent);
+      color: white;
+      border-top-right-radius: 5px;
+    }
+    .assistant-message .message-content {
+      background: var(--light);
+      color: var(--dark);
+      border-top-left-radius: 5px;
+    }
+
+    /* Chat Input */
+    .chat-input {
+      padding: 20px 30px;
+      background: white;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 15px;
+      align-items: flex-end;
+    }
+    .chat-input textarea {
+      flex: 1;
+      padding: 15px;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      resize: none;
+      font-size: 15px;
+      line-height: 1.5;
+      min-height: 54px;
+      max-height: 150px;
+      transition: all 0.3s ease;
+    }
+    .chat-input textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(44,115,210,0.1);
+    }
+    .send-btn {
+      padding: 0 25px;
+      height: 54px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 15px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .send-btn:hover:not(:disabled) {
+      background: var(--primary);
+      transform: translateY(-1px);
+      box-shadow: var(--message-shadow);
+    }
+    .send-btn:disabled {
+      background: var(--border);
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+    .send-icon {
+      width: 18px;
+      height: 18px;
+      filter: brightness(0) invert(1);
+    }
+
+    /* Typing Indicator */
+    .typing-indicator {
+      display: inline-flex;
+      align-items: center;
+      background: var(--light);
+      padding: 15px 20px;
+      border-radius: 15px;
+      margin-bottom: 25px;
+      box-shadow: var(--message-shadow);
+      animation: messageAppear 0.3s forwards;
+    }
+    .typing-dots { display: flex; gap: 5px; }
+    .typing-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+      opacity: 0.6;
+    }
+    .typing-dot:nth-child(1) { animation: typing 1.4s infinite; }
+    .typing-dot:nth-child(2) { animation: typing 1.4s infinite 0.2s; }
+    .typing-dot:nth-child(3) { animation: typing 1.4s infinite 0.4s; }
+
+    @keyframes typing {
+      0%, 100% { transform: translateY(0); opacity: 0.6; }
+      50% { transform: translateY(-5px); opacity: 1; }
+    }
+
+    /* Connection Status */
+    .connection-status {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 10px 20px;
+      border-radius: 8px;
+      color: white;
+      font-weight: 500;
+      animation: statusAppear 0.3s forwards;
+      z-index: 1000;
+    }
+    .connection-status.success { background: var(--success); }
+    .connection-status.error { background: var(--error); }
+    @keyframes statusAppear {
+      from { transform: translateY(-100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    /* WhatsApp Button */
+    .whatsapp-button {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      width: 60px;
+      height: 60px;
+      background: #25D366;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: var(--hover-shadow);
+      z-index: 100;
+    }
+    .whatsapp-button:hover {
+      transform: translateY(-2px) scale(1.05);
+      box-shadow: 0 8px 20px rgba(37,211,102,0.3);
+    }
+    .whatsapp-icon {
+      width: 30px;
+      height: 30px;
+      filter: brightness(0) invert(1);
+    }
+
+    /* Scrollbar personalizado */
+    .chat-messages::-webkit-scrollbar { width: 8px; }
+    .chat-messages::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 4px;
+    }
+    .chat-messages::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 4px;
+    }
+    .chat-messages::-webkit-scrollbar-thumb:hover {
+      background: #666;
+    }
+
+    /* Sección Documentos: estilo contenedor */
+    .document-container {
+      background: white;
+      border-radius: 15px;
+      box-shadow: var(--message-shadow);
+      border: 1px solid rgba(0,0,0,0.05);
+      margin-top: 20px;
+      padding: 20px 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    .document-container h2 {
+      font-size: 18px;
+      color: var(--primary);
+      margin-bottom: 5px;
+      font-weight: 600;
+    }
+    .file-upload-label {
+      background: var(--light);
+      border: 2px dashed var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .file-upload-label:hover {
+      background: #fafafa;
+    }
+    .file-upload-label input {
+      display: none; /* Ocultamos input real */
+    }
+    .doc-actions {
+      display: flex;
+      flex-direction: row;
+      gap: 10px;
+      align-items: center;
+    }
+    .doc-actions button {
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .doc-actions button:hover {
+      background: var(--primary);
+    }
+    .analysis-result {
+      background: var(--light);
+      padding: 15px;
+      border-radius: 8px;
+      white-space: pre-wrap;
+      box-shadow: var(--message-shadow);
+    }
+
+    @media (max-width: 768px) {
+      body { padding: 10px; }
+      .main-container { gap: 10px; }
+      .app-header { padding: 10px 15px; }
+      .brand-name { font-size: 20px; }
+      .chat-messages { padding: 20px; }
+      .chat-input { padding: 15px; }
+      .message { max-width: 90%; }
+      .whatsapp-button {
+        bottom: 20px; right: 20px;
+        width: 50px; height: 50px;
+      }
+      .whatsapp-icon { width: 25px; height: 25px; }
+      .logout-btn { padding: 8px 15px; }
+    }
+    @media (max-width: 400px) {
+      .brand-name { font-size: 18px; }
+      .logout-btn { font-size: 12px; }
+      .chat-input textarea { min-height: 40px; }
+      .send-btn { padding: 0 15px; height: 40px; }
+      .send-icon { width: 16px; height: 16px; }
+    }
+  </style>
 </head>
-<body class="bg-gray-100">
-    <div class="container mx-auto px-4 py-8">
-        <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-6">
-            <h1 class="text-2xl font-bold mb-6 text-center">Análisis de Documentos Legales</h1>
-            
-            <div class="mb-6">
-                <div class="flex items-center justify-center w-full">
-                    <label class="w-full flex flex-col items-center px-4 py-6 bg-white rounded-lg shadow-lg tracking-wide border border-blue-500 cursor-pointer hover:bg-blue-500 hover:text-white">
-                        <svg class="w-8 h-8" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                            <path d="M16.88 9.1A4 4 0 0 1 16 17H5a5 5 0 0 1-1-9.9V7a3 3 0 0 1 4.52-2.59A4.98 4.98 0 0 1 17 8c0 .38-.04.74-.12 1.1zM11 11h3l-4-4-4 4h3v3h2v-3z" />
-                        </svg>
-                        <span class="mt-2 text-sm">Seleccionar documento</span>
-                        <input type='file' class="hidden" id="fileInput" accept=".txt,.doc,.docx,.pdf"/>
-                    </label>
-                </div>
-                <div id="fileName" class="mt-2 text-center text-sm text-gray-600"></div>
-            </div>
+<body>
+  <div class="main-container">
+    <!-- Encabezado -->
+    <header class="app-header">
+      <div class="brand" onclick="window.location.href='/menu'">
+        <img src="/assets/logo.png" alt="AbogadApp" class="logo">
+        <span class="brand-name">AbogadApp</span>
+      </div>
+      <div class="user-info">
+        <span id="userName" class="user-name">Cargando...</span>
+        <button id="logoutButton" class="logout-btn">Cerrar sesión</button>
+      </div>
+    </header>
 
-            <div class="mb-6">
-                <textarea id="queryInput" class="w-full px-3 py-2 border rounded-lg" rows="3" 
-                          placeholder="¿Qué quieres saber sobre este documento? (opcional)"></textarea>
-            </div>
-
-            <div class="text-center">
-                <button id="analyzeBtn" class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 disabled:bg-gray-400"
-                        disabled>
-                    Analizar Documento
-                </button>
-            </div>
-
-            <div id="result" class="mt-6 p-4 bg-gray-50 rounded-lg hidden">
-                <h2 class="font-bold mb-2">Análisis:</h2>
-                <div id="analysisResult" class="whitespace-pre-wrap"></div>
-            </div>
-        </div>
+    <!-- Contenedor de Chat (Deudas, etc.) -->
+    <div class="chat-container">
+      <div id="chatMessages" class="chat-messages"></div>
+      <div class="chat-input">
+        <textarea
+          id="messageInput"
+          placeholder="Escribe tu mensaje aquí..."
+          rows="1"
+        ></textarea>
+        <button id="sendButton" class="send-btn">
+          <img src="/assets/send-icon.png" alt="Enviar" class="send-icon">
+          Enviar
+        </button>
+      </div>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-auth.js"></script>
-    <script>
-        document.getElementById('fileInput').addEventListener('change', function(e) {
-            const fileName = e.target.files[0]?.name;
-            document.getElementById('fileName').textContent = fileName || '';
-            document.getElementById('analyzeBtn').disabled = !fileName;
+    <!-- Contenedor para subir/documentos -->
+    <div class="document-container">
+      <h2>Análisis de Documentos</h2>
+      <label class="file-upload-label">
+        <div id="fileLabelText">Haz clic o arrastra un archivo aquí</div>
+        <input type="file" id="fileInput" accept=".txt,.pdf,.png,.jpg,.jpeg,.doc,.docx" />
+      </label>
+      <textarea
+        id="queryInput"
+        rows="2"
+        placeholder="¿Qué quieres saber sobre este documento? (opcional)"
+        style="width: 100%; padding: 10px; border: 2px solid var(--border); border-radius: 8px;"
+      ></textarea>
+      <div class="doc-actions">
+        <button id="analyzeBtn" disabled>Analizar Documento</button>
+        <span id="selectedFileName" style="font-size: 0.9rem; color: var(--dark);"></span>
+      </div>
+      <div id="docResult" class="analysis-result" style="display: none; margin-top: 10px;"></div>
+    </div>
+  </div>
+
+  <!-- Botón de WhatsApp -->
+  <div class="whatsapp-button" onclick="redirectToWhatsApp()">
+    <img src="/assets/whatsapp-icon.png" alt="WhatsApp" class="whatsapp-icon">
+  </div>
+
+  <script>
+    //================= CHAT LÓGICA ===================
+    let auth;
+    let selectedCategory;
+    let isProcessing = false;
+    let conversationHistory = [];
+    let retryAttempts = 0;
+    const MAX_RETRIES = 3;
+    const RETRY_DELAY = 1000;
+
+    // Configuración de Firebase
+    const firebaseConfig = {
+      apiKey: "TU-APIKEY-FIREBASE",
+      authDomain: "TU-AUTHDOMAIN-FIREBASE",
+      projectId: "TU-PROYECTOID-FIREBASE",
+      storageBucket: "TU-STORAGE-FIREBASE",
+      messagingSenderId: "763390302400",
+      appId: "TU-APPID-FIREBASE"
+    };
+
+    try {
+      if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+      }
+      auth = firebase.auth();
+    } catch (error) {
+      console.error("Error al inicializar Firebase:", error);
+      showConnectionStatus('Error de inicialización', 'error');
+    }
+
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+        window.location.href = '/';
+        return;
+      }
+      document.getElementById('userName').textContent = user.displayName || user.email || 'Usuario';
+
+      selectedCategory = sessionStorage.getItem('selectedCategory') || 'deudas';
+      // Llamamos checkAPIConnection y Chat
+      await checkAPIConnection();
+      initializeChat();
+    });
+
+    async function checkAPIConnection() {
+      try {
+        const token = await auth.currentUser.getIdToken();
+        const response = await fetchWithTimeout('/api/health', {
+          headers: { 'Authorization': `Bearer ${token}` }
         });
+        if (!response.ok) throw new Error('API no disponible');
+        showConnectionStatus('Conectado', 'success');
+      } catch (error) {
+        showConnectionStatus('Error de conexión', 'error');
+        throw error;
+      }
+    }
 
-        document.getElementById('analyzeBtn').addEventListener('click', async function() {
-            const file = document.getElementById('fileInput').files[0];
-            const query = document.getElementById('queryInput').value;
-            
-            if (!file) return;
+    function initializeChat() {
+      const welcomeMessage = `Hola, veo que tienes consultas sobre problemas con deudas o bancos. 
+Por favor, responde estas preguntas para ayudarte mejor:
 
-            const formData = new FormData();
-            formData.append('document', file);
-            formData.append('query', query);
+¿Qué tipo de deuda tienes? (por ejemplo: bancaria, tarjeta de crédito, préstamo personal u otra)`;
+      addMessage(welcomeMessage, 'assistant');
+      conversationHistory.push({ role: 'assistant', content: welcomeMessage });
+    }
 
-            try {
-                // Obtener el token de Firebase
-                const user = firebase.auth().currentUser;
-                if (!user) {
-                    alert('Por favor, inicia sesión primero');
-                    return;
-                }
+    async function fetchWithTimeout(url, options, timeout = 8000) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-                const token = await user.getIdToken();
-                
-                const response = await fetch('/api/analyzeDocument', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: formData
-                });
+      try {
+        const response = await fetch(url, { ...options, signal: controller.signal });
+        clearTimeout(timeoutId);
+        return response;
+      } catch (error) {
+        clearTimeout(timeoutId);
+        throw error;
+      }
+    }
 
-                const data = await response.json();
-                
-                if (response.ok) {
-                    document.getElementById('result').classList.remove('hidden');
-                    document.getElementById('analysisResult').textContent = data.response;
-                } else {
-                    alert(data.error || 'Error al analizar el documento');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Error al procesar el documento');
-            }
+    async function sendMessage(retry = false) {
+      if (isProcessing && !retry) return;
+      const input = document.getElementById('messageInput');
+      const message = input.value.trim();
+      if (!message && !retry) return;
+
+      isProcessing = true;
+      const sendButton = document.getElementById('sendButton');
+      sendButton.disabled = true;
+
+      if (!retry) {
+        input.value = '';
+        input.style.height = '54px';
+        addMessage(message, 'user');
+        conversationHistory.push({ role: 'user', content: message });
+      }
+
+      const typingIndicator = showTypingIndicator();
+
+      try {
+        await checkAPIConnection();
+        const token = await auth.currentUser.getIdToken();
+        const response = await fetchWithTimeout('/api/chatWithAI', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            message,
+            category: selectedCategory,
+            conversationHistory
+          })
         });
-    </script>
+        if (!response.ok) throw new Error('Error en la respuesta del servidor');
+
+        const data = await response.json();
+        typingIndicator.remove();
+
+        if (data.response) {
+          addMessage(data.response, 'assistant');
+          conversationHistory.push({ role: 'assistant', content: data.response });
+          await saveMessageToFirestore(message, 'user');
+          await saveMessageToFirestore(data.response, 'assistant');
+          retryAttempts = 0;
+        } else {
+          throw new Error('Respuesta vacía del servidor');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        typingIndicator?.remove();
+        if (retryAttempts < MAX_RETRIES) {
+          retryAttempts++;
+          await new Promise(res => setTimeout(res, RETRY_DELAY * retryAttempts));
+          sendMessage(true);
+          return;
+        }
+        showConnectionStatus('Error al enviar mensaje', 'error');
+        addMessage('Lo siento, ha ocurrido un error. Por favor, intenta nuevamente.', 'assistant');
+        retryAttempts = 0;
+      } finally {
+        isProcessing = false;
+        input.disabled = false;
+        sendButton.disabled = false;
+        if (!retry) input.focus();
+      }
+    }
+
+    function showTypingIndicator() {
+      const messagesDiv = document.getElementById('chatMessages');
+      const typingDiv = document.createElement('div');
+      typingDiv.className = 'typing-indicator';
+      typingDiv.innerHTML = `
+        <div class="typing-dots">
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+        </div>
+      `;
+      messagesDiv.appendChild(typingDiv);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      return typingDiv;
+    }
+
+    async function saveMessageToFirestore(message, sender) {
+      try {
+        const user = auth.currentUser;
+        if (!user) return;
+        const db = firebase.firestore();
+        await db.collection('chats').add({
+          userId: user.uid,
+          message,
+          sender,
+          category: selectedCategory,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      } catch (error) {
+        console.error('Error al guardar mensaje:', error);
+      }
+    }
+
+    function addMessage(text, sender) {
+      const messagesDiv = document.getElementById('chatMessages');
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${sender}-message`;
+      messageDiv.innerHTML = `<div class="message-content">${text}</div>`;
+      messagesDiv.appendChild(messageDiv);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    function showConnectionStatus(message, type) {
+      const existingStatus = document.querySelector('.connection-status');
+      if (existingStatus) existingStatus.remove();
+
+      const statusDiv = document.createElement('div');
+      statusDiv.className = `connection-status ${type}`;
+      statusDiv.textContent = message;
+      document.body.appendChild(statusDiv);
+
+      setTimeout(() => {
+        statusDiv.style.animation = 'statusDisappear 0.3s forwards';
+        setTimeout(() => statusDiv.remove(), 300);
+      }, 3000);
+    }
+
+    const messageInput = document.getElementById('messageInput');
+    messageInput.addEventListener('input', function() {
+      this.style.height = '54px';
+      this.style.height = Math.min(this.scrollHeight, 150) + 'px';
+    });
+    messageInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+    document.getElementById('sendButton').addEventListener('click', () => sendMessage());
+
+    document.getElementById('logoutButton').addEventListener('click', async () => {
+      try {
+        await auth.signOut();
+        window.location.href = '/';
+      } catch (error) {
+        console.error("Error al cerrar sesión:", error);
+        showConnectionStatus('Error al cerrar sesión', 'error');
+      }
+    });
+
+    function redirectToWhatsApp() {
+      const phoneNumber = '+56999999999';
+      const message = encodeURIComponent('Hola, necesito ayuda legal profesional sobre problemas con deudas o bancos. ¿Podría asesorarme?');
+      window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
+    }
+
+    window.addEventListener('online', () => {
+      showConnectionStatus('Conexión restaurada', 'success');
+    });
+    window.addEventListener('offline', () => {
+      showConnectionStatus('Sin conexión', 'error');
+    });
+    window.addEventListener('beforeunload', (e) => {
+      if (isProcessing || messageInput.value.trim()) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    });
+
+    //================= DOCUMENTOS LÓGICA ===================
+    const fileInput = document.getElementById('fileInput');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const fileLabelText = document.getElementById('fileLabelText');
+    const selectedFileName = document.getElementById('selectedFileName');
+    const docResult = document.getElementById('docResult');
+    const queryInput = document.getElementById('queryInput');
+
+    // Detectar archivo seleccionado
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files && fileInput.files[0]) {
+        const fileName = fileInput.files[0].name;
+        fileLabelText.textContent = `Archivo seleccionado: ${fileName}`;
+        analyzeBtn.disabled = false;
+        selectedFileName.textContent = fileName;
+      } else {
+        fileLabelText.textContent = 'Haz clic o arrastra un archivo aquí';
+        analyzeBtn.disabled = true;
+        selectedFileName.textContent = '';
+      }
+    });
+
+    analyzeBtn.addEventListener('click', async () => {
+      if (!fileInput.files || !fileInput.files[0]) return;
+
+      try {
+        // Obtenemos token de Firebase
+        const user = auth.currentUser;
+        if (!user) {
+          alert("Por favor inicia sesión primero");
+          return;
+        }
+        const token = await user.getIdToken();
+
+        const formData = new FormData();
+        formData.append('document', fileInput.files[0]);
+        formData.append('query', queryInput.value.trim());
+
+        const resp = await fetch('/api/analyzeDocument', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+          body: formData
+        });
+        const data = await resp.json();
+        if (resp.ok) {
+          docResult.style.display = 'block';
+          docResult.textContent = data.response;
+        } else {
+          alert(data.error || 'Error al analizar el documento');
+        }
+      } catch (error) {
+        console.error("Error al analizar documento:", error);
+        alert('Error al procesar el documento.');
+      }
+    });
+  </script>
 </body>
 </html>
