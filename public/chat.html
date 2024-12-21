@@ -51,6 +51,7 @@
       gap: 20px;
     }
 
+    /* Encabezado */
     .app-header {
       background: white;
       padding: 15px 30px;
@@ -61,15 +62,12 @@
       align-items: center;
       border: 1px solid rgba(0,0,0,0.05);
     }
-
     .brand {
       display: flex;
       align-items: center;
       gap: 15px;
       cursor: pointer;
     }
-
-    /* Aquí se referencia el logo */
     .logo {
       width: 50px;
       height: 50px;
@@ -79,26 +77,22 @@
     .logo:hover {
       transform: scale(1.1);
     }
-
     .brand-name {
       font-size: 24px;
       font-weight: 600;
       color: var(--primary);
       letter-spacing: -0.5px;
     }
-
     .user-info {
       display: flex;
       align-items: center;
       gap: 20px;
     }
-
     .user-name {
       font-size: 16px;
       font-weight: 500;
       color: var(--dark);
     }
-
     .logout-btn {
       padding: 10px 20px;
       background: var(--accent);
@@ -116,6 +110,7 @@
       box-shadow: var(--message-shadow);
     }
 
+    /* Contenedor principal del chat */
     .chat-container {
       flex: 1;
       background: white;
@@ -127,38 +122,32 @@
       border: 1px solid rgba(0,0,0,0.05);
       position: relative;
     }
-
     .chat-messages {
       flex: 1;
       overflow-y: auto;
       padding: 30px;
       scroll-behavior: smooth;
     }
-
     .message {
       margin-bottom: 25px;
       opacity: 0;
       transform: translateY(20px);
       animation: messageAppear 0.3s forwards;
     }
-
     @keyframes messageAppear {
       to {
         opacity: 1;
         transform: translateY(0);
       }
     }
-
     .message.user-message {
       margin-left: auto;
       max-width: 80%;
     }
-
     .message.assistant-message {
       margin-right: auto;
       max-width: 80%;
     }
-
     .message-content {
       padding: 15px 20px;
       border-radius: 15px;
@@ -171,19 +160,18 @@
       box-shadow: var(--hover-shadow);
       background: linear-gradient(120deg, rgba(255,255,255,0.8), rgba(255,255,255,0.9));
     }
-
     .user-message .message-content {
       background: var(--accent);
       color: white;
       border-top-right-radius: 5px;
     }
-
     .assistant-message .message-content {
       background: var(--light);
       color: var(--dark);
       border-top-left-radius: 5px;
     }
 
+    /* Input del chat */
     .chat-input {
       padding: 20px 30px;
       background: white;
@@ -192,7 +180,6 @@
       gap: 15px;
       align-items: flex-end;
     }
-
     .chat-input textarea {
       flex: 1;
       padding: 15px;
@@ -210,7 +197,6 @@
       border-color: var(--accent);
       box-shadow: 0 0 0 3px rgba(44,115,210,0.1);
     }
-
     .send-btn {
       padding: 0 25px;
       height: 54px;
@@ -236,13 +222,13 @@
       cursor: not-allowed;
       opacity: 0.7;
     }
-
     .send-icon {
       width: 18px;
       height: 18px;
       filter: brightness(0) invert(1);
     }
 
+    /* Indicador de "escribiendo" */
     .typing-indicator {
       display: inline-flex;
       align-items: center;
@@ -267,12 +253,12 @@
     .typing-dot:nth-child(1) { animation: typing 1.4s infinite; }
     .typing-dot:nth-child(2) { animation: typing 1.4s infinite 0.2s; }
     .typing-dot:nth-child(3) { animation: typing 1.4s infinite 0.4s; }
-
     @keyframes typing {
       0%, 100% { transform: translateY(0); opacity: 0.6; }
       50% { transform: translateY(-5px); opacity: 1; }
     }
 
+    /* Mensajes de estado de conexión */
     .connection-status {
       position: fixed;
       top: 20px;
@@ -295,7 +281,7 @@
       to { transform: translateY(0); opacity: 1; }
     }
 
-    /* Botón de WhatsApp */
+    /* Botón WhatsApp */
     .whatsapp-button {
       position: fixed;
       bottom: 30px;
@@ -316,11 +302,26 @@
       transform: translateY(-2px) scale(1.05);
       box-shadow: 0 8px 20px rgba(37,211,102,0.3);
     }
-
     .whatsapp-icon {
       width: 30px;
       height: 30px;
       filter: brightness(0) invert(1);
+    }
+
+    /* Scrollbar personalizado */
+    .chat-messages::-webkit-scrollbar {
+      width: 8px;
+    }
+    .chat-messages::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 4px;
+    }
+    .chat-messages::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 4px;
+    }
+    .chat-messages::-webkit-scrollbar-thumb:hover {
+      background: #666;
     }
 
     @media (max-width: 768px) {
@@ -386,7 +387,7 @@
     <header class="app-header">
       <div class="brand" onclick="window.location.href='/menu'">
         <!-- Logo AbogadApp -->
-        <img src="/assets/logo.png" alt="AbogadApp" class="logo">
+        <img src="/assets/logo.png" alt="AbogadApp Logo" class="logo">
         <span class="brand-name">AbogadApp</span>
       </div>
       <div class="user-info">
@@ -403,6 +404,7 @@
           placeholder="Escribe tu mensaje aquí..."
           rows="1"></textarea>
         <button id="sendButton" class="send-btn">
+          <!-- Ícono de enviar -->
           <img src="/assets/send-icon.png" alt="Enviar" class="send-icon">
           Enviar
         </button>
@@ -410,7 +412,7 @@
     </div>
   </div>
 
-  <!-- Botón de WhatsApp al final -->
+  <!-- Botón de WhatsApp -->
   <div class="whatsapp-button" onclick="redirectToWhatsApp()">
     <img src="/assets/whatsapp-icon.png" alt="WhatsApp" class="whatsapp-icon">
   </div>
@@ -424,7 +426,7 @@
     const MAX_RETRIES = 3;
     const RETRY_DELAY = 1000;
 
-    // Configuración de Firebase
+    // Config Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyD242Qba3E-UgeA1UPXp9PgmjJK_Xg6VKY",
       authDomain: "deudazero-b8e33.firebaseapp.com",
@@ -434,24 +436,22 @@
       appId: "1:763390302400:web:6d9f294001f9af5731b525"
     };
 
-    // Inicializar Firebase
     try {
       if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
       }
       auth = firebase.auth();
-    } catch (error) {
-      console.error("Error al inicializar Firebase:", error);
+    } catch (err) {
+      console.error("Error al inicializar Firebase:", err);
       showConnectionStatus('Error de inicialización', 'error');
     }
 
-    // Verificar autenticación
-    auth.onAuthStateChanged(async (user) => {
+    // Verif. Auth
+    auth.onAuthStateChanged(async user => {
       if (!user) {
         window.location.href = '/';
         return;
       }
-
       document.getElementById('userName').textContent = user.displayName || user.email || 'Usuario';
       
       selectedCategory = sessionStorage.getItem('selectedCategory');
@@ -467,125 +467,109 @@
     async function checkAPIConnection() {
       try {
         const token = await auth.currentUser.getIdToken();
-        const response = await fetchWithTimeout('/api/health', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
+        const resp = await fetchWithTimeout('/api/health', {
+          headers: { 'Authorization': `Bearer ${token}` }
         });
-        
-        if (!response.ok) {
-          throw new Error('API no disponible');
-        }
-        
+        if (!resp.ok) throw new Error('API no disponible');
         showConnectionStatus('Conectado', 'success');
-      } catch (error) {
+      } catch (e) {
         showConnectionStatus('Error de conexión', 'error');
-        throw error;
+        throw e;
       }
     }
 
     function initializeChat() {
-      const welcomeMessage = `Hola, veo que tienes consultas sobre problemas con deudas o bancos. Por favor, responde estas preguntas para ayudarte mejor:
+      const welcome = `Hola, veo que tienes consultas sobre problemas con deudas o bancos. 
+Por favor, responde estas preguntas para ayudarte mejor:
 
 ¿Qué tipo de deuda tienes? (por ejemplo: bancaria, tarjeta de crédito, préstamo personal u otra)`;
-      addMessage(welcomeMessage, 'assistant');
-      conversationHistory.push({ role: 'assistant', content: welcomeMessage });
+      addMessage(welcome, 'assistant');
+      conversationHistory.push({ role: 'assistant', content: welcome });
     }
 
-    async function fetchWithTimeout(url, options, timeout = 8000) {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), timeout);
-      
+    async function fetchWithTimeout(url, options, timeout=8000) {
+      const ctrl = new AbortController();
+      const tId = setTimeout(() => ctrl.abort(), timeout);
       try {
-        const response = await fetch(url, {
-          ...options,
-          signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-        return response;
-      } catch (error) {
-        clearTimeout(timeoutId);
-        throw error;
+        const r = await fetch(url, { ...options, signal: ctrl.signal });
+        clearTimeout(tId);
+        return r;
+      } catch (e) {
+        clearTimeout(tId);
+        throw e;
       }
     }
 
-    async function sendMessage(retry = false) {
+    async function sendMessage(retry=false) {
       if (isProcessing && !retry) return;
 
-      const input = document.getElementById('messageInput');
-      const message = input.value.trim();
-      
-      if (!message && !retry) return;
-      
+      const inp = document.getElementById('messageInput');
+      const msg = inp.value.trim();
+      if (!msg && !retry) return;
+
       isProcessing = true;
-      const sendButton = document.getElementById('sendButton');
-      sendButton.disabled = true;
-      
+      const btn = document.getElementById('sendButton');
+      btn.disabled = true;
+
       if (!retry) {
-        input.value = '';
-        input.style.height = '54px';
-        addMessage(message, 'user');
-        conversationHistory.push({ role: 'user', content: message });
+        inp.value = '';
+        inp.style.height = '54px';
+        addMessage(msg, 'user');
+        conversationHistory.push({ role: 'user', content: msg });
       }
 
-      const typingIndicator = showTypingIndicator();
+      const typing = showTypingIndicator();
 
       try {
         await checkAPIConnection();
         const token = await auth.currentUser.getIdToken();
-        const response = await fetchWithTimeout('/api/chatWithAI', {
+        const resp = await fetchWithTimeout('/api/chatWithAI', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           },
           body: JSON.stringify({
-            message,
+            message: msg,
             category: selectedCategory,
             conversationHistory
           })
         });
-
-        if (!response.ok) {
-          throw new Error('Error en la respuesta del servidor');
-        }
-
-        const data = await response.json();
-        typingIndicator.remove();
+        if (!resp.ok) throw new Error('Error en la respuesta del servidor');
+        const data = await resp.json();
+        typing.remove();
 
         if (data.response) {
           addMessage(data.response, 'assistant');
           conversationHistory.push({ role: 'assistant', content: data.response });
-          await saveMessageToFirestore(message, 'user');
+          await saveMessageToFirestore(msg, 'user');
           await saveMessageToFirestore(data.response, 'assistant');
           retryAttempts = 0;
         } else {
           throw new Error('Respuesta vacía del servidor');
         }
-      } catch (error) {
-        console.error('Error:', error);
-        typingIndicator?.remove();
-
+      } catch (e) {
+        console.error(e);
+        typing?.remove();
         if (retryAttempts < MAX_RETRIES) {
           retryAttempts++;
-          await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * retryAttempts));
+          await new Promise(r => setTimeout(r, RETRY_DELAY*retryAttempts));
           sendMessage(true);
           return;
         }
-
         showConnectionStatus('Error al enviar mensaje', 'error');
         addMessage('Lo siento, ha ocurrido un error. Por favor, intenta nuevamente.', 'assistant');
         retryAttempts = 0;
       } finally {
         isProcessing = false;
-        input.disabled = false;
-        sendButton.disabled = false;
-        if (!retry) input.focus();
+        inp.disabled = false;
+        btn.disabled = false;
+        if (!retry) inp.focus();
       }
     }
 
     function showTypingIndicator() {
-      const messagesDiv = document.getElementById('chatMessages');
+      const msgs = document.getElementById('chatMessages');
       const typingDiv = document.createElement('div');
       typingDiv.className = 'typing-indicator';
       typingDiv.innerHTML = `
@@ -595,64 +579,57 @@
           <div class="typing-dot"></div>
         </div>
       `;
-      messagesDiv.appendChild(typingDiv);
-      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      msgs.appendChild(typingDiv);
+      msgs.scrollTop = msgs.scrollHeight;
       return typingDiv;
     }
 
-    async function saveMessageToFirestore(message, sender) {
+    async function saveMessageToFirestore(msg, sender) {
       try {
         const user = auth.currentUser;
         if (!user) return;
-
         const db = firebase.firestore();
         await db.collection('chats').add({
           userId: user.uid,
-          message: message,
+          message: msg,
           sender: sender,
           category: selectedCategory,
           timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
-      } catch (error) {
-        console.error('Error al guardar mensaje:', error);
+      } catch (err) {
+        console.error('Error al guardar mensaje:', err);
       }
     }
 
-    function addMessage(text, sender) {
-      const messagesDiv = document.getElementById('chatMessages');
-      const messageDiv = document.createElement('div');
-      messageDiv.className = `message ${sender}-message`;
-      messageDiv.innerHTML = `<div class="message-content">${text}</div>`;
-      messagesDiv.appendChild(messageDiv);
-      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    function addMessage(txt, sender) {
+      const msgs = document.getElementById('chatMessages');
+      const div = document.createElement('div');
+      div.className = `message ${sender}-message`;
+      div.innerHTML = `<div class="message-content">${txt}</div>`;
+      msgs.appendChild(div);
+      msgs.scrollTop = msgs.scrollHeight;
     }
 
-    function showConnectionStatus(message, type) {
-      const existingStatus = document.querySelector('.connection-status');
-      if (existingStatus) {
-        existingStatus.remove();
-      }
-
-      const statusDiv = document.createElement('div');
-      statusDiv.className = `connection-status ${type}`;
-      statusDiv.textContent = message;
-      document.body.appendChild(statusDiv);
+    function showConnectionStatus(msg, type) {
+      const exists = document.querySelector('.connection-status');
+      if (exists) exists.remove();
+      const div = document.createElement('div');
+      div.className = `connection-status ${type}`;
+      div.textContent = msg;
+      document.body.appendChild(div);
 
       setTimeout(() => {
-        statusDiv.style.animation = 'statusDisappear 0.3s forwards';
-        setTimeout(() => statusDiv.remove(), 300);
+        div.style.animation = 'statusDisappear 0.3s forwards';
+        setTimeout(() => div.remove(), 300);
       }, 3000);
     }
 
-    // Event Listeners
-    const messageInput = document.getElementById('messageInput');
-
-    messageInput.addEventListener('input', function() {
+    document.getElementById('messageInput').addEventListener('input', function() {
       this.style.height = '54px';
       this.style.height = Math.min(this.scrollHeight, 150) + 'px';
     });
 
-    messageInput.addEventListener('keydown', function(e) {
+    document.getElementById('messageInput').addEventListener('keydown', function(e) {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         sendMessage();
@@ -665,30 +642,27 @@
       try {
         await auth.signOut();
         window.location.href = '/';
-      } catch (error) {
-        console.error("Error al cerrar sesión:", error);
+      } catch (err) {
+        console.error("Error al cerrar sesión:", err);
         showConnectionStatus('Error al cerrar sesión', 'error');
       }
     });
 
     function redirectToWhatsApp() {
       const phoneNumber = '+56999999999';
-      const message = encodeURIComponent('Hola, necesito ayuda legal profesional sobre problemas con deudas o bancos. ¿Podría asesorarme?');
-      window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
+      const text = encodeURIComponent('Hola, necesito ayuda legal profesional sobre problemas con deudas o bancos. ¿Podría asesorarme?');
+      window.open(`https://wa.me/${phoneNumber}?text=${text}`, '_blank');
     }
 
-    // Manejo de estado de conexión
     window.addEventListener('online', () => {
       showConnectionStatus('Conexión restaurada', 'success');
     });
-
     window.addEventListener('offline', () => {
       showConnectionStatus('Sin conexión', 'error');
     });
 
-    // Prevenir cierre accidental
     window.addEventListener('beforeunload', (e) => {
-      if (isProcessing || messageInput.value.trim()) {
+      if (isProcessing || document.getElementById('messageInput').value.trim()) {
         e.preventDefault();
         e.returnValue = '';
       }
