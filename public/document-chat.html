@@ -21,8 +21,6 @@
       --dark: #333;
       --light: #f8f9fa;
       --border: #dee2e6;
-      --message-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      --hover-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
 
     * {
@@ -33,58 +31,35 @@
     }
 
     body {
-      background: linear-gradient(120deg, var(--background) 0%, #ffffff 100%);
+      background: var(--background);
       min-height: 100vh;
       padding: 20px;
-      display: flex;
-      flex-direction: column;
     }
 
-    .main-container {
-      max-width: 1200px;
-      margin: 0 auto;
-      width: 100%;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-
-    .app-header {
-      background: white;
-      padding: 15px 30px;
-      border-radius: 15px;
-      box-shadow: var(--message-shadow);
+    .header {
+      background-color: white;
+      padding: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border: 1px solid rgba(0,0,0,0.05);
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      cursor: pointer;
+      margin-bottom: 30px;
+      border-radius: 10px;
     }
 
     .logo {
-      width: 50px;
-      height: 50px;
-      object-fit: contain;
-      transition: transform 0.2s ease;
+      width: 150px;
+      cursor: pointer;
     }
 
-    .brand-name {
-      font-size: 24px;
-      font-weight: 600;
-      color: var(--primary);
+    .logo:hover {
+      opacity: 0.9;
     }
 
     .user-info {
       display: flex;
       align-items: center;
-      gap: 20px;
+      gap: 15px;
     }
 
     .user-name {
@@ -94,7 +69,7 @@
 
     .logout-btn {
       padding: 10px 20px;
-      background: var(--accent);
+      background-color: var(--accent);
       color: white;
       border: none;
       border-radius: 5px;
@@ -103,21 +78,22 @@
     }
 
     .logout-btn:hover {
-      background: var(--primary);
+      background-color: var(--primary);
     }
 
-    .document-container {
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
       background: white;
-      border-radius: 15px;
-      box-shadow: var(--message-shadow);
       padding: 30px;
-      margin: 20px 0;
+      border-radius: 15px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
 
     .title {
       font-size: 24px;
       color: var(--primary);
-      margin-bottom: 15px;
+      margin-bottom: 20px;
     }
 
     .description {
@@ -126,50 +102,58 @@
       line-height: 1.5;
     }
 
-    .file-upload-zone {
-      border: 2px dashed var(--border);
-      border-radius: 10px;
-      padding: 30px;
+    .file-upload {
+      margin: 20px 0;
       text-align: center;
+    }
+
+    .btn-upload {
+      padding: 15px 30px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
       cursor: pointer;
+      font-size: 16px;
+      font-weight: 500;
       transition: all 0.3s ease;
-      margin-bottom: 20px;
     }
 
-    .file-upload-zone:hover {
-      border-color: var(--accent);
-      background: #f8f9fa;
-    }
-
-    .file-upload-zone input[type="file"] {
-      display: none;
+    .btn-upload:hover {
+      background: var(--primary);
+      transform: translateY(-1px);
     }
 
     .file-list {
-      margin: 20px 0;
-      max-height: 200px;
-      overflow-y: auto;
+      margin: 15px 0;
+      padding: 10px;
+      border-radius: 8px;
     }
 
     .file-item {
-      padding: 10px;
-      margin: 5px 0;
+      padding: 12px 15px;
+      margin: 8px 0;
       background: #f8f9fa;
       border-radius: 8px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .file-item small {
+      color: #666;
     }
 
     .query-input {
       width: 100%;
       padding: 15px;
+      margin: 20px 0;
       border: 2px solid var(--border);
       border-radius: 8px;
-      margin: 20px 0;
-      font-size: 1rem;
-      resize: vertical;
+      font-size: 16px;
       min-height: 100px;
+      resize: vertical;
     }
 
     .query-input:focus {
@@ -188,8 +172,9 @@
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      transition: all 0.3s ease;
+      font-size: 16px;
       font-weight: 500;
+      transition: all 0.3s ease;
     }
 
     .btn-primary {
@@ -199,6 +184,7 @@
 
     .btn-primary:hover:not(:disabled) {
       background: var(--primary);
+      transform: translateY(-1px);
     }
 
     .btn-primary:disabled {
@@ -213,19 +199,20 @@
 
     .analysis-result {
       margin-top: 20px;
-      padding: 15px;
+      padding: 20px;
       background: #f8f9fa;
       border-radius: 8px;
       white-space: pre-wrap;
       display: none;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
 
     .whatsapp-button {
       position: fixed;
-      bottom: 30px;
-      right: 30px;
-      width: 60px;
-      height: 60px;
+      bottom: 20px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
       background: #25D366;
       border-radius: 50%;
       display: flex;
@@ -243,8 +230,8 @@
     }
 
     .whatsapp-icon {
-      width: 35px;
-      height: 35px;
+      width: 30px;
+      height: 30px;
     }
 
     @media (max-width: 768px) {
@@ -252,13 +239,12 @@
         padding: 10px;
       }
 
-      .app-header {
-        padding: 15px;
+      .header {
         flex-direction: column;
         gap: 15px;
       }
 
-      .document-container {
+      .container {
         padding: 20px;
       }
 
@@ -266,64 +252,56 @@
         flex-direction: column;
       }
 
-      .whatsapp-button {
-        width: 50px;
-        height: 50px;
-        bottom: 20px;
-        right: 20px;
-      }
-
-      .whatsapp-icon {
-        width: 30px;
-        height: 30px;
+      .btn {
+        width: 100%;
       }
     }
   </style>
 </head>
 <body>
-  <div class="main-container">
-    <header class="app-header">
-      <div class="brand" onclick="window.location.href='/menu'">
-        <img src="/assets/logo.png" alt="AbogadApp Logo" class="logo">
-        <span class="brand-name">AbogadApp</span>
-      </div>
-      <div class="user-info">
-        <span id="userName" class="user-name">Cargando...</span>
-        <button id="logoutButton" class="logout-btn">Cerrar sesión</button>
-      </div>
-    </header>
-
-    <div class="document-container">
-      <h1 class="title">Análisis de Documentos</h1>
-      <p class="description">
-        Sube uno o varios archivos (contratos, resoluciones, etc.) y describe tu consulta.
-        AbogadApp te ayudará a interpretarlos y explicarlos en términos simples.
-      </p>
-
-      <div class="file-upload-zone">
-        <div id="uploadText">Arrastra tus archivos aquí o haz clic para seleccionarlos</div>
-        <input type="file" id="fileInput" multiple accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png">
-      </div>
-
-      <div id="fileList" class="file-list"></div>
-
-      <textarea 
-        class="query-input"
-        id="queryInput"
-        placeholder="¿Qué necesitas saber sobre estos documentos? Escribe tu consulta aquí..."
-      ></textarea>
-
-      <div class="action-buttons">
-        <button id="analyzeBtn" class="btn btn-primary" disabled>
-          Analizar Documentos
-        </button>
-        <button id="clearBtn" class="btn btn-secondary" style="display: none;">
-          Limpiar
-        </button>
-      </div>
-
-      <div id="analysisResult" class="analysis-result"></div>
+  <header class="header">
+    <img src="/assets/logo.png" alt="AbogadApp Logo" class="logo" onclick="window.location.href='/menu'">
+    <div class="user-info">
+      <span id="userName" class="user-name">Cargando...</span>
+      <button id="logoutButton" class="logout-btn">Cerrar sesión</button>
     </div>
+  </header>
+
+  <div class="container">
+    <h1 class="title">Análisis de Documentos</h1>
+    <p class="description">
+      Selecciona uno o varios archivos (contratos, resoluciones, etc.) y describe tu consulta.
+      AbogadApp te ayudará a interpretarlos y explicarlos en términos simples.
+    </p>
+
+    <div class="file-upload">
+      <button class="btn-upload" onclick="document.getElementById('fileInput').click()">
+        Seleccionar Archivos
+      </button>
+      <input 
+        type="file" 
+        id="fileInput" 
+        multiple 
+        accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+        style="display: none;"
+      >
+    </div>
+
+    <div id="fileList" class="file-list"></div>
+
+    <textarea
+      id="queryInput"
+      class="query-input"
+      placeholder="¿Cuál es tu consulta sobre estos documentos?"
+    ></textarea>
+
+    <div class="action-buttons">
+      <button id="analyzeBtn" class="btn btn-primary" disabled>
+        Analizar Documentos
+      </button>
+    </div>
+
+    <div id="analysisResult" class="analysis-result"></div>
   </div>
 
   <div class="whatsapp-button" onclick="redirectToWhatsApp()">
@@ -331,7 +309,6 @@
   </div>
 
   <script>
-    // Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyD242Qba3E-UgeA1UPXp9PgmjJK_Xg6VKY",
       authDomain: "deudazero-b8e33.firebaseapp.com",
@@ -346,7 +323,6 @@
     }
     const auth = firebase.auth();
 
-    // Auth Check
     auth.onAuthStateChanged(user => {
       if (!user) {
         window.location.href = '/';
@@ -355,21 +331,15 @@
       document.getElementById('userName').textContent = user.displayName || user.email || 'Usuario';
     });
 
-    // File Handling
     const fileInput = document.getElementById('fileInput');
     const analyzeBtn = document.getElementById('analyzeBtn');
-    const clearBtn = document.getElementById('clearBtn');
     const fileList = document.getElementById('fileList');
     const analysisResult = document.getElementById('analysisResult');
-    const queryInput = document.getElementById('queryInput');
 
     fileInput.addEventListener('change', function(e) {
       if (e.target.files.length > 0) {
         analyzeBtn.disabled = false;
-        clearBtn.style.display = 'block';
         updateFileList(e.target.files);
-      } else {
-        resetForm();
       }
     });
 
@@ -394,18 +364,6 @@
       return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
 
-    function resetForm() {
-      fileInput.value = '';
-      queryInput.value = '';
-      fileList.innerHTML = '';
-      analyzeBtn.disabled = true;
-      clearBtn.style.display = 'none';
-      analysisResult.style.display = 'none';
-    }
-
-    clearBtn.addEventListener('click', resetForm);
-
-    // Document Analysis
     analyzeBtn.addEventListener('click', async function() {
       if (!fileInput.files.length) return;
 
@@ -426,6 +384,7 @@
           formData.append('document', file);
         });
 
+        const queryInput = document.getElementById('queryInput');
         formData.append('query', queryInput.value || 'Por favor, explica estos documentos');
 
         const response = await fetch('/api/analyzeDocument', {
@@ -454,14 +413,12 @@
       }
     });
 
-    // Utils
     function redirectToWhatsApp() {
       const phoneNumber = '+56999999999';
       const text = encodeURIComponent('Hola, necesito ayuda con documentos legales.');
       window.open(`https://wa.me/${phoneNumber}?text=${text}`, '_blank');
     }
 
-    // Logout
     document.getElementById('logoutButton').addEventListener('click', async () => {
       try {
         await auth.signOut();
@@ -469,14 +426,6 @@
       } catch (error) {
         console.error('Error al cerrar sesión:', error);
         alert('Error al cerrar sesión');
-      }
-    });
-
-    // Prevent accidental close
-    window.addEventListener('beforeunload', (e) => {
-      if (fileInput.files.length > 0 && !analysisResult.textContent) {
-        e.preventDefault();
-        e.returnValue = '';
       }
     });
   </script>
