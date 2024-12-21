@@ -35,7 +35,8 @@ const db = admin.firestore();
 
 // 3. Middlewares
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // 4. Configuración de env para el cliente
@@ -52,7 +53,7 @@ app.get('/env-config.js', (req, res) => {
   res.send(`window.ENV = ${JSON.stringify(envVars)};`);
 });
 
-// 5. OpenAI (versión antigua)
+// 5. OpenAI
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
@@ -120,7 +121,6 @@ app.post('/api/chatWithAI', authenticateUser, async (req, res) => {
     // Agregar mensaje actual
     messages.push({ role: 'user', content: message });
 
-    // Crear respuesta (versión antigua de openai)
     const completion = await openai.chat.completions.create({
       model: 'gpt-4',
       messages,
@@ -174,17 +174,21 @@ app.post('/api/chatWithAI', authenticateUser, async (req, res) => {
   }
 });
 
-/* ======================== NUEVA FUNCIONALIDAD: Análisis de Documento ======================== */
+// 9. Configuración de multer para archivos
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: undefined // Sin límite específico
+  }
+});
 
-const upload = multer({ storage: multer.memoryStorage() });
-
+// 10. Función para procesar archivos
 async function extractTextFromFile(file) {
   const mimeType = file.mimetype;
   let text = '';
 
   try {
     if (mimeType.startsWith('image/')) {
-      // Procesar imagen con Sharp + Tesseract
       const optimizedBuffer = await sharp(file.buffer)
         .resize(3000, 3000, { fit: 'inside' })
         .normalize()
@@ -197,16 +201,13 @@ async function extractTextFromFile(file) {
       text = result.data.text;
 
     } else if (mimeType === 'application/pdf') {
-      // Procesar PDF
       const pdfData = await PDFParser(file.buffer);
       text = pdfData.text;
 
     } else if (mimeType.startsWith('text/')) {
-      // Archivos de texto
       text = file.buffer.toString('utf-8');
 
     } else {
-      // Cualquier otro (docx, etc.) => leer binario como string (podría no ser óptimo)
       text = file.buffer.toString('utf-8');
     }
 
@@ -217,26 +218,32 @@ async function extractTextFromFile(file) {
   }
 }
 
-app.post('/api/analyzeDocument', authenticateUser, upload.single('document'), async (req, res) => {
+// 11. Ruta para análisis de múltiples documentos
+app.post('/api/analyzeDocument', authenticateUser, upload.array('document'), async (req, res) => {
   try {
-    if (!req.file) {
+    if (!req.files || req.files.length === 0) {
       return res.status(400).json({
         error: 'Documento no proporcionado',
-        details: 'Se requiere un archivo para analizar'
+        details: 'Se requiere al menos un archivo para analizar'
       });
     }
 
-    console.log(`Procesando documento: ${req.file.originalname} (${req.file.mimetype})`);
-    const documentText = await extractTextFromFile(req.file);
+    // Procesar todos los archivos
+    let allText = '';
+    for (const file of req.files) {
+      console.log(`Procesando documento: ${file.originalname} (${file.mimetype})`);
+      const documentText = await extractTextFromFile(file);
+      allText += `\n\n=== ${file.originalname} ===\n${documentText}`;
+    }
 
-    if (!documentText || !documentText.trim()) {
+    if (!allText.trim()) {
       return res.status(400).json({
         error: 'No se pudo extraer texto',
-        details: 'El documento proporcionado no contiene texto reconocible'
+        details: 'Los documentos proporcionados no contienen texto reconocible'
       });
     }
 
-    const userQuery = req.body.query || "Por favor, explica este documento en términos simples.";
+    const userQuery = req.body.query || "Por favor, explica estos documentos en términos simples.";
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4',
@@ -247,7 +254,7 @@ app.post('/api/analyzeDocument', authenticateUser, upload.single('document'), as
         },
         {
           role: 'user',
-          content: `Documento a analizar:\n\n${documentText}\n\nPregunta del usuario: ${userQuery}`
+          content: `Documentos a analizar:\n${allText}\n\nPregunta del usuario: ${userQuery}`
         }
       ],
       temperature: 0.7,
@@ -257,9 +264,11 @@ app.post('/api/analyzeDocument', authenticateUser, upload.single('document'), as
     // Guardar en Firestore
     await db.collection('documentAnalysis').add({
       userId: req.user.uid,
-      fileName: req.file.originalname,
-      fileType: req.file.mimetype,
-      fileSize: req.file.size,
+      files: req.files.map(f => ({
+        fileName: f.originalname,
+        fileType: f.mimetype,
+        fileSize: f.size
+      })),
       query: userQuery,
       response: completion.choices[0].message.content,
       timestamp: admin.firestore.FieldValue.serverTimestamp()
@@ -267,13 +276,12 @@ app.post('/api/analyzeDocument', authenticateUser, upload.single('document'), as
 
     return res.json({
       response: completion.choices[0].message.content,
-      documentType: req.file.mimetype,
-      fileName: req.file.originalname
+      filesProcessed: req.files.map(f => f.originalname)
     });
   } catch (error) {
-    console.error('Error al analizar documento:', error);
+    console.error('Error al analizar documentos:', error);
     return res.status(500).json({
-      error: 'Error al procesar el documento',
+      error: 'Error al procesar los documentos',
       details: process.env.NODE_ENV === 'development'
         ? error.message
         : 'Error interno del servidor'
@@ -281,9 +289,7 @@ app.post('/api/analyzeDocument', authenticateUser, upload.single('document'), as
   }
 });
 
-/* ========================= FIN NUEVA FUNCIONALIDAD ========================= */
-
-// Rutas principales
+// 12. Rutas principales
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public/index.html'));
 });
@@ -300,7 +306,7 @@ app.get('/document-chat', (req, res) => {
   res.sendFile(path.join(__dirname, 'public/document-chat.html'));
 });
 
-// Manejo de errores global
+// 13. Manejo de errores global
 app.use((err, req, res, next) => {
   console.error('Error no manejado:', err);
   res.status(500).json({
@@ -311,8 +317,9 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Iniciar servidor
+// 14. Iniciar servidor
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en puerto ${PORT}`);
+  console.log(`Ambiente: ${process.env.NODE_ENV || 'development'}`);
 });
