@@ -239,7 +239,6 @@
       opacity: 0.7;
     }
 
-    /* NUEVO: ícono de enviar (puedes colocar un svg con flechita, por ejemplo) */
     .send-icon {
       width: 18px;
       height: 18px;
@@ -298,6 +297,7 @@
       to { transform: translateY(0); opacity: 1; }
     }
 
+    /* NUEVO: Botón de WhatsApp (mismo estilo que tu otro código) */
     .whatsapp-button {
       position: fixed;
       bottom: 30px;
@@ -323,22 +323,6 @@
       width: 30px;
       height: 30px;
       filter: brightness(0) invert(1);
-    }
-
-    /* Scrollbar personalizado */
-    .chat-messages::-webkit-scrollbar {
-      width: 8px;
-    }
-    .chat-messages::-webkit-scrollbar-track {
-      background: #f1f1f1;
-      border-radius: 4px;
-    }
-    .chat-messages::-webkit-scrollbar-thumb {
-      background: #888;
-      border-radius: 4px;
-    }
-    .chat-messages::-webkit-scrollbar-thumb:hover {
-      background: #666;
     }
 
     @media (max-width: 768px) {
@@ -378,7 +362,6 @@
       }
     }
 
-    /* NUEVO: para pantallas muy pequeñas (max-width: 400px) */
     @media (max-width: 400px) {
       .brand-name {
         font-size: 18px;
@@ -421,7 +404,7 @@
           placeholder="Escribe tu mensaje aquí..."
           rows="1"></textarea>
         <button id="sendButton" class="send-btn">
-          <!-- NUEVO: ícono en el botón de enviar -->
+          <!-- Ícono en el botón de enviar -->
           <img src="/assets/send-icon.png" alt="Enviar" class="send-icon">
           Enviar
         </button>
@@ -429,6 +412,7 @@
     </div>
   </div>
 
+  <!-- NUEVO: Botón de WhatsApp -->
   <div class="whatsapp-button" onclick="redirectToWhatsApp()">
     <img src="/assets/whatsapp-icon.png" alt="WhatsApp" class="whatsapp-icon">
   </div>
@@ -689,10 +673,11 @@
       }
     });
 
+    // NUEVO: función redirectToWhatsApp
     function redirectToWhatsApp() {
       const phoneNumber = '+56999999999';
-      const message = encodeURIComponent('Hola, necesito ayuda legal profesional sobre problemas con deudas o bancos. ¿Podría asesorarme?');
-      window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
+      const text = encodeURIComponent('Hola, necesito ayuda legal profesional sobre problemas con deudas o bancos. ¿Podría asesorarme?');
+      window.open(`https://wa.me/${phoneNumber}?text=${text}`, '_blank');
     }
 
     // Manejo de estado de conexión
