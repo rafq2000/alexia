@@ -26,12 +26,7 @@ const db = admin.firestore();
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Configuraciones CORS
-app.use(cors({
-    origin: '*',
-    methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-}));
-
+app.use(cors());
 app.use(express.json());
 
 // Ruta para variables de entorno del cliente
@@ -72,16 +67,21 @@ const authenticateUser = async (req, res, next) => {
 };
 
 // Ruta del chat
-app.post('/api/chatWithAI', authenticateUser, async (req, res) => {
+app.post('/chatWithAI', authenticateUser, async (req, res) => {
     try {
-        const { message, category } = req.body;
+        const { message } = req.body;
         
-        if (!message || !category) {
-            return res.status(400).json({ error: 'Mensaje o categoría faltante' });
+        if (!message) {
+            return res.status(400).json({ error: 'Mensaje faltante' });
         }
 
-        // Agregar logging para debug
-        console.log('Procesando mensaje:', { message, category });
+        console.log('Procesando mensaje:', message);
+
+        // Incrementar contador de consultas
+        await db.collection('stats').doc('global').set({
+            totalConsultas: admin.firestore.FieldValue.increment(1),
+            ultimaActualizacion: admin.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
 
         const completion = await openai.chat.completions.create({
             model: 'gpt-4',
@@ -89,44 +89,27 @@ app.post('/api/chatWithAI', authenticateUser, async (req, res) => {
                 {
                     role: 'system',
                     content: `Eres un asistente legal especializado en leyes chilenas, específicamente en:
-                    - Deudas bancarias
-                    - Créditos y repactaciones
-                    - Quiebra personal
-                    - Insolvencia
+                    - Deudas bancarias y créditos
+                    - Repactaciones y refinanciamientos
+                    - Quiebra personal e insolvencia
                     - Ley 20.720 de Reorganización y Liquidación
+                    - Negociación con bancos y acreedores
                     
-                    Da respuestas claras y prácticas enfocadas en estos temas.`
+                    Proporciona respuestas claras, prácticas y enfocadas en estos temas financieros y legales.
+                    Si te preguntan sobre otros temas, indica amablemente que tu especialidad es en temas de deudas
+                    e insolvencia. Usa un lenguaje simple y explica los términos técnicos cuando sea necesario.`
                 },
                 { role: 'user', content: message }
             ],
             temperature: 0.7,
-            max_tokens: 500
+            max_tokens: 800
         });
 
-        // Log de respuesta exitosa
-        console.log('Respuesta generada exitosamente');
-
+        console.log('Respuesta generada correctamente');
         return res.json({ response: completion.choices[0].message.content });
     } catch (error) {
         console.error('Error detallado en chatWithAI:', error);
-        
-        // Respuesta de error más específica
-        return res.status(500).json({ 
-            error: 'Error al procesar la consulta',
-            details: error.message
-        });
-    }
-});
-
-// Estadísticas
-app.get('/stats', authenticateUser, async (req, res) => {
-    try {
-        const statsRef = await db.collection('stats').doc('global').get();
-        const stats = statsRef.data() || { totalConsultas: 0 };
-        res.json(stats);
-    } catch (error) {
-        console.error('Error al obtener estadísticas:', error);
-        res.status(500).json({ error: 'Error interno del servidor' });
+        return res.status(500).json({ error: 'Error al procesar la consulta' });
     }
 });
 
@@ -143,38 +126,14 @@ app.get('/chat', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/chat.html'));
 });
 
-// Error 404
-app.use((req, res) => {
-    res.status(404).sendFile(path.join(__dirname, 'public/index.html'));
-});
-
 // Manejo de errores
 app.use((err, req, res, next) => {
     console.error(err.stack);
-    res.status(500).send('¡Algo salió mal!');
+    res.status(500).json({ error: 'Error interno del servidor' });
 });
 
 // Iniciar servidor
 const PORT = process.env.PORT || 3000;
-const server = app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, () => {
     console.log(`Servidor corriendo en puerto ${PORT}`);
-});
-
-// Manejo de errores del servidor
-server.on('error', (error) => {
-    if (error.syscall !== 'listen') {
-        throw error;
-    }
-    switch (error.code) {
-        case 'EACCES':
-            console.error(`El puerto ${PORT} requiere privilegios elevados`);
-            process.exit(1);
-            break;
-        case 'EADDRINUSE':
-            console.error(`El puerto ${PORT} ya está en uso`);
-            process.exit(1);
-            break;
-        default:
-            throw error;
-    }
 });
