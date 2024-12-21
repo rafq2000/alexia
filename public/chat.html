@@ -365,21 +365,24 @@
 
     try {
         const token = await auth.currentUser.getIdToken();
-        const response = await fetch('/chatWithAI', {  // Cambio aquí: de '/api/chatWithAI' a '/chatWithAI'
+        const response = await fetch('/api/chatWithAI', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({
-                message: message  // Simplificado: ya no enviamos category
+                message,
+                category: selectedCategory
             })
         });
 
+        // Remover indicador de pensando
         thinkingDiv.remove();
 
         if (!response.ok) {
-            throw new Error('Error en la respuesta del servidor');
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Error en el servidor');
         }
 
         const data = await response.json();
@@ -389,7 +392,7 @@
             throw new Error('Respuesta vacía del servidor');
         }
     } catch (error) {
-        console.error('Error:', error);
+        console.error('Error en chat:', error);
         thinkingDiv?.remove();
         addMessage('Lo siento, ha ocurrido un error. Por favor, intenta nuevamente.', 'assistant');
     } finally {
