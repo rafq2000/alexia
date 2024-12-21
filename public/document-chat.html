@@ -26,9 +26,7 @@
     }
 
     * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+      margin: 0; padding: 0; box-sizing: border-box;
       font-family: 'Segoe UI', system-ui, sans-serif;
     }
 
@@ -36,101 +34,59 @@
       background: linear-gradient(120deg, var(--background) 0%, #ffffff 100%);
       min-height: 100vh;
       padding: 20px;
-      display: flex;
-      flex-direction: column;
+      display: flex; flex-direction: column;
       transition: all 0.3s ease;
     }
 
     .main-container {
-      max-width: 1200px;
-      margin: 0 auto;
-      width: 100%;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
+      max-width: 1200px; margin: 0 auto; width: 100%;
+      flex: 1; display: flex; flex-direction: column; gap: 20px;
     }
 
     /* Encabezado */
     .app-header {
-      background: white;
-      padding: 15px 30px;
-      border-radius: 15px;
-      box-shadow: var(--message-shadow);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      background: white; padding: 15px 30px;
+      border-radius: 15px; box-shadow: var(--message-shadow);
+      display: flex; justify-content: space-between; align-items: center;
       border: 1px solid rgba(0,0,0,0.05);
     }
     .brand {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      cursor: pointer;
+      display: flex; align-items: center; gap: 15px; cursor: pointer;
     }
     .logo {
-      width: 50px;
-      height: 50px;
-      object-fit: contain;
-      transition: transform 0.2s ease;
+      width: 50px; height: 50px; object-fit: contain; transition: transform 0.2s ease;
     }
-    .logo:hover {
-      transform: scale(1.1);
-    }
+    .logo:hover { transform: scale(1.1); }
     .brand-name {
-      font-size: 24px;
-      font-weight: 600;
-      color: var(--primary);
-      letter-spacing: -0.5px;
+      font-size: 24px; font-weight: 600; color: var(--primary); letter-spacing: -0.5px;
     }
     .user-info {
-      display: flex;
-      align-items: center;
-      gap: 20px;
+      display: flex; align-items: center; gap: 20px;
     }
     .user-name {
-      font-size: 16px;
-      font-weight: 500;
-      color: var(--dark);
+      font-size: 16px; font-weight: 500; color: var(--dark);
     }
     .logout-btn {
-      padding: 10px 20px;
-      background: var(--accent);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      font-weight: 500;
-      font-size: 14px;
+      padding: 10px 20px; background: var(--accent); color: white; border: none;
+      border-radius: 8px; cursor: pointer; transition: all 0.3s ease;
+      font-weight: 500; font-size: 14px;
     }
     .logout-btn:hover {
-      background: var(--primary);
-      transform: translateY(-1px);
+      background: var(--primary); transform: translateY(-1px);
       box-shadow: var(--message-shadow);
     }
 
-    /* Chat */
+    /* Chat Container */
     .chat-container {
-      background: white;
-      border-radius: 15px;
-      box-shadow: var(--message-shadow);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      border: 1px solid rgba(0,0,0,0.05);
-      position: relative;
+      background: white; border-radius: 15px; box-shadow: var(--message-shadow);
+      display: flex; flex-direction: column; overflow: hidden;
+      border: 1px solid rgba(0,0,0,0.05); position: relative;
     }
     .chat-messages {
-      flex: 1;
-      overflow-y: auto;
-      padding: 30px;
-      scroll-behavior: smooth;
+      flex: 1; overflow-y: auto; padding: 30px; scroll-behavior: smooth;
     }
     .message {
-      margin-bottom: 25px;
-      opacity: 0;
-      transform: translateY(20px);
+      margin-bottom: 25px; opacity: 0; transform: translateY(20px);
       animation: messageAppear 0.3s forwards;
     }
     @keyframes messageAppear {
@@ -139,11 +95,8 @@
     .message.user-message { margin-left: auto; max-width: 80%; }
     .message.assistant-message { margin-right: auto; max-width: 80%; }
     .message-content {
-      padding: 15px 20px;
-      border-radius: 15px;
-      box-shadow: var(--message-shadow);
-      transition: all 0.3s ease;
-      position: relative;
+      padding: 15px 20px; border-radius: 15px; box-shadow: var(--message-shadow);
+      transition: all 0.3s ease; position: relative;
     }
     .message-content:hover {
       transform: translateY(-1px);
@@ -151,54 +104,28 @@
       background: linear-gradient(120deg, rgba(255,255,255,0.8), rgba(255,255,255,0.9));
     }
     .user-message .message-content {
-      background: var(--accent);
-      color: white;
-      border-top-right-radius: 5px;
+      background: var(--accent); color: white; border-top-right-radius: 5px;
     }
     .assistant-message .message-content {
-      background: var(--light);
-      color: var(--dark);
-      border-top-left-radius: 5px;
+      background: var(--light); color: var(--dark); border-top-left-radius: 5px;
     }
     .chat-input {
-      padding: 20px 30px;
-      background: white;
-      border-top: 1px solid var(--border);
-      display: flex;
-      gap: 15px;
-      align-items: flex-end;
+      padding: 20px 30px; background: white; border-top: 1px solid var(--border);
+      display: flex; gap: 15px; align-items: flex-end;
     }
     .chat-input textarea {
-      flex: 1;
-      padding: 15px;
-      border: 2px solid var(--border);
-      border-radius: 12px;
-      resize: none;
-      font-size: 15px;
-      line-height: 1.5;
-      min-height: 54px;
-      max-height: 150px;
+      flex: 1; padding: 15px; border: 2px solid var(--border); border-radius: 12px;
+      resize: none; font-size: 15px; line-height: 1.5; min-height: 54px; max-height: 150px;
       transition: all 0.3s ease;
     }
     .chat-input textarea:focus {
-      outline: none;
-      border-color: var(--accent);
+      outline: none; border-color: var(--accent);
       box-shadow: 0 0 0 3px rgba(44,115,210,0.1);
     }
     .send-btn {
-      padding: 0 25px;
-      height: 54px;
-      background: var(--accent);
-      color: white;
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      font-size: 15px;
-      font-weight: 500;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      padding: 0 25px; height: 54px; background: var(--accent); color: white;
+      border: none; border-radius: 12px; cursor: pointer; transition: all 0.3s ease;
+      font-size: 15px; font-weight: 500; display: flex; align-items: center; gap: 8px;
     }
     .send-btn:hover:not(:disabled) {
       background: var(--primary);
@@ -206,36 +133,21 @@
       box-shadow: var(--message-shadow);
     }
     .send-btn:disabled {
-      background: var(--border);
-      cursor: not-allowed;
-      opacity: 0.7;
+      background: var(--border); cursor: not-allowed; opacity: 0.7;
     }
-
-    /* Aquí un ícono base64 para evitar 404 */
     .send-icon {
-      width: 18px;
-      height: 18px;
-      /* icono de "paper plane" en base64 */
+      width: 18px; height: 18px;
       background: url("data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjZmZmIiB2aWV3Qm94PSIwIDAgMTM1Ljg2IDEzNS44NiIgd2lkdGg9IjE0IiBoZWlnaHQ9IjE0IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxnPjxwYXRoIGQ9Ik0xMzUuODYuNzYzYzAtLjE1OC0uMDktLjMxMy0uMTgtLjQzN2MtLjE4OC0uMTgyLS40My0uMjk3LS43LS4zMDggLS4yMTEtLjAyNC0yMC45MjEtMi4xODMtNDMuNzI4LTQuNjQ2LTQwLjE5OC0zLjcyNi03OS4zMjItNy40NTMtMTE5LjQ4NC0xMS4xODMtNS4wNzUtLjUwMy05LjM2MyAxLjQ5NC0xMC45OTguNjk4LTEuMjYtLjY0NC0yLjMxLTIuMTgzLTIuMzEtLjM1NHYuMDA3YzAgLjEzMS0yMy42NzggNjEuNDc2LTI3LjEgNzAuMjk1Yy0xLjAzNCAyLjUxOC0uNjIxIDUuMzE1IDEuMDc5IDcuMjU0IDEuNTgxIDEuOTQgNC4yNzMgMi41MjQgNi41NiAxLjQ0OSA4LjIyOS0zLjc3NSAxNi40NzctNy41NTYgMjQuNzYyLTExLjM0OSA1LjM1My0yLjQzNCA4LjY1NC04LjcxNCA3LjcwMS0xNC4yMzYtLjU2Ni0zLjExMi0xMi4wMjYtMzEuNzQ3LTEyLjAyNy0zMS43NDdoLjAwOGMuMDAzLS4wMzMuMDMtLjA3Ny4wNy0uMTE3LjA2NS0uMDc1LjE3OS0uMTEyLjI4OC0uMTA1IDAgMCA4NC45NDggNDUuNDQyIDg3Ljk5MSA0Ni4zMi45NDEuMzExIDIuMDc4LjI2NiAzLjAwNi0uMTExLjExNC4wMi4yMTkuMDUuMzMxLjA1OGwuMDU0LjAwNS4wNDEtLjAwNHMuMDI3LjAwMi4wMDctLjAwNGguMDAzYy4zMTEtLjAzOCA2My44MzItNjcuNzQ4IDcwLjI4My03MS4wNTcuNTUyLS4zODYgLjgxNy0xLjExNC44MTctMi4wNjctLjAwMy0uMzEzLS4wOTQtLjYzMS0uMjk1LS45MS0uMTkyLS4yOTEtLjQ2MS0uNTI3LS43NzMtLjcwNi0uMDk3LS4wNTQtLjI2My0uMDczLS41MDgtLjA1NCAyMi4zNy0yLjQzMSA0My42NzItNC42ODggNDMuODQ4LTQuNjg5LjAzNyAwIC4wNjkuMDAzLjEwNi4wMDUuMjU3LjA1LjQ5Mi4wMS42OCAuMDMzLjIzOS4wNDIuNTg2LS4yMzIuNjgyLS40OTR6Ii8+PC9nPjwvc3ZnPg==") no-repeat center/contain;
     }
 
-    /* Documentos */
+    /* Documentos (Múltiples Archivos) */
     .document-container {
-      background: white;
-      border-radius: 15px;
-      box-shadow: var(--message-shadow);
-      border: 1px solid rgba(0,0,0,0.05);
-      margin-top: 20px;
-      padding: 20px 30px;
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
+      background: white; border-radius: 15px; box-shadow: var(--message-shadow);
+      border: 1px solid rgba(0,0,0,0.05); margin-top: 20px;
+      padding: 20px 30px; display: flex; flex-direction: column; gap: 15px;
     }
     .document-container h2 {
-      font-size: 18px;
-      color: var(--primary);
-      margin-bottom: 5px;
-      font-weight: 600;
+      font-size: 18px; color: var(--primary); margin-bottom: 5px; font-weight: 600;
     }
     .file-upload-label {
       background: var(--light);
@@ -252,8 +164,8 @@
       display: flex; flex-direction: row; gap: 10px; align-items: center;
     }
     .doc-actions button {
-      background: var(--accent); color: white; border: none;
-      border-radius: 8px; padding: 10px 20px; cursor: pointer; transition: all 0.3s ease;
+      background: var(--accent); color: white; border: none; border-radius: 8px;
+      padding: 10px 20px; cursor: pointer; transition: all 0.3s ease;
     }
     .doc-actions button:hover { background: var(--primary); }
     .analysis-result {
@@ -261,11 +173,9 @@
       white-space: pre-wrap; box-shadow: var(--message-shadow);
     }
 
-    /* Connection & status */
     .connection-status {
-      position: fixed; top: 20px; right: 20px; padding: 10px 20px;
-      border-radius: 8px; color: white; font-weight: 500; animation: statusAppear 0.3s forwards;
-      z-index: 1000;
+      position: fixed; top: 20px; right: 20px; padding: 10px 20px; border-radius: 8px;
+      color: white; font-weight: 500; animation: statusAppear 0.3s forwards; z-index: 1000;
     }
     .connection-status.success { background: var(--success); }
     .connection-status.error { background: var(--error); }
@@ -274,12 +184,11 @@
       to { transform: translateY(0); opacity: 1; }
     }
 
-    /* WhatsApp button */
     .whatsapp-button {
-      position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px;
-      background: #25D366; border-radius: 50%; display: flex; align-items: center;
-      justify-content: center; cursor: pointer; transition: all 0.3s ease; box-shadow: var(--hover-shadow);
-      z-index: 100;
+      position: fixed; bottom: 30px; right: 30px;
+      width: 60px; height: 60px; background: #25D366;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.3s ease; box-shadow: var(--hover-shadow); z-index: 100;
     }
     .whatsapp-button:hover {
       transform: translateY(-2px) scale(1.05);
@@ -289,7 +198,6 @@
       width: 30px; height: 30px; filter: brightness(0) invert(1);
     }
 
-    /* Responsivo (como antes) */
     @media (max-width: 768px) {
       body { padding: 10px; }
       .main-container { gap: 10px; }
@@ -309,11 +217,15 @@
       .send-btn { padding: 0 15px; height: 40px; }
       .send-icon { width: 16px; height: 16px; }
     }
+    @keyframes typing {
+      0%, 100% { transform: translateY(0); opacity: 0.6; }
+      50% { transform: translateY(-5px); opacity: 1; }
+    }
   </style>
 </head>
 <body>
   <div class="main-container">
-    <!-- Encabezado -->
+    <!-- ENCABEZADO -->
     <header class="app-header">
       <div class="brand" onclick="window.location.href='/menu'">
         <img src="/assets/logo.png" alt="AbogadApp" class="logo">
@@ -325,50 +237,51 @@
       </div>
     </header>
 
-    <!-- Chat Container -->
+    <!-- CHAT -->
     <div class="chat-container">
       <div id="chatMessages" class="chat-messages"></div>
       <div class="chat-input">
         <textarea id="messageInput" placeholder="Escribe tu mensaje aquí..." rows="1"></textarea>
         <button id="sendButton" class="send-btn">
-          <div class="send-icon"></div>  <!-- Base64 icon -->
+          <div class="send-icon"></div>
           Enviar
         </button>
       </div>
     </div>
 
-    <!-- Document Container -->
+    <!-- DOCS: Múltiples Archivos -->
     <div class="document-container">
       <h2>Análisis de Documentos</h2>
       <p style="color: var(--dark);">
-        ¡Hola! Sube un archivo (contrato, resolución, etc.) y describe tu pregunta principal. 
-        AbogadApp te ayudará a interpretarlo y responder tus dudas.
+        ¡Hola! Sube uno o varios archivos (contratos, resoluciones, etc.) 
+        y describe tu duda principal. AbogadApp te ayudará a interpretarlos.
       </p>
+      <!-- AÑADIMOS multiple -->
       <label class="file-upload-label">
-        <div id="fileLabelText">Haz clic o arrastra un archivo aquí</div>
-        <input type="file" id="fileInput" accept=".txt,.pdf,.png,.jpg,.jpeg,.doc,.docx" />
+        <div id="fileLabelText">Haz clic o arrastra archivos aquí</div>
+        <input type="file" id="fileInput" accept=".txt,.pdf,.png,.jpg,.jpeg,.doc,.docx" multiple />
       </label>
       <textarea
         id="queryInput"
         rows="2"
-        placeholder="¿Cuál es tu duda principal sobre este documento?"
+        placeholder="¿Cuál es tu duda principal sobre estos documentos?"
         style="width: 100%; padding: 10px; border: 2px solid var(--border); border-radius: 8px;"
       ></textarea>
       <div class="doc-actions">
-        <button id="analyzeBtn" disabled>Analizar Documento</button>
+        <button id="analyzeBtn" disabled>Analizar Documentos</button>
         <span id="selectedFileName" style="font-size: 0.9rem; color: var(--dark);"></span>
       </div>
       <div id="docResult" class="analysis-result" style="display: none; margin-top: 10px;"></div>
     </div>
   </div>
 
-  <!-- Botón WhatsApp -->
+  <!-- BOTÓN WHATSAPP -->
   <div class="whatsapp-button" onclick="redirectToWhatsApp()">
     <img src="/assets/whatsapp-icon.png" alt="WhatsApp" class="whatsapp-icon">
   </div>
 
   <script>
-    /* ========== Firebase Init ========== */
+    /* ========== Firebase INIT ========== */
     const firebaseConfig = {
       apiKey: "TU_FIREBASE_API_KEY",
       authDomain: "TU_FIREBASE_AUTH_DOMAIN",
@@ -380,9 +293,8 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
 
-    auth.onAuthStateChanged((user) => {
+    auth.onAuthStateChanged(user => {
       if (!user) {
-        // No forzamos redirección, solo avisamos
         console.warn("No hay usuario logueado, pero no redirigimos.");
       } else {
         document.getElementById('userName').textContent = user.displayName || user.email || 'Usuario';
@@ -399,7 +311,7 @@
       }
     });
 
-    /* ========== Chat Lógica ========== */
+    /* ========== CHAT LÓGICA ========== */
     let isProcessing = false;
     let conversationHistory = [];
     let retryAttempts = 0;
@@ -413,11 +325,11 @@
         const token = await user.getIdToken();
         const resp = await fetchWithTimeout('/api/health', {
           headers: { 'Authorization': `Bearer ${token}` }
-        }, 8000);
+        }, 5000);
         if (!resp.ok) throw new Error('API no disponible');
         showConnectionStatus('Conectado', 'success');
       } catch (err) {
-        showConnectionStatus('Error de conexión', 'error');
+        console.warn("No se pudo verificar API health:", err);
       }
     }
 
@@ -450,9 +362,9 @@
       const controller = new AbortController();
       const tId = setTimeout(() => controller.abort(), timeout);
       try {
-        const response = await fetch(url, { ...options, signal: controller.signal });
+        const r = await fetch(url, { ...options, signal: controller.signal });
         clearTimeout(tId);
-        return response;
+        return r;
       } catch (err) {
         clearTimeout(tId);
         throw err;
@@ -462,31 +374,30 @@
     async function sendMessage(retry=false) {
       if (isProcessing && !retry) return;
       const input = document.getElementById('messageInput');
-      const message = input.value.trim();
-      if (!message && !retry) return;
+      const msg = input.value.trim();
+      if (!msg && !retry) return;
 
       isProcessing = true;
-      const sendBtn = document.getElementById('sendButton');
-      sendBtn.disabled = true;
+      const btn = document.getElementById('sendButton');
+      btn.disabled = true;
 
       if (!retry) {
         input.value = '';
         input.style.height = '54px';
-        addMessage(message, 'user');
-        conversationHistory.push({ role: 'user', content: message });
+        addMessage(msg, 'user');
+        conversationHistory.push({ role: 'user', content: msg });
       }
 
-      const typingIndicator = showTypingIndicator();
+      const typing = showTypingIndicator();
       try {
         await checkAPIConnection();
         const user = auth.currentUser;
         if (!user) {
-          typingIndicator.remove();
-          showConnectionStatus('Inicia sesión para usar el chat', 'error');
+          typing.remove();
+          showConnectionStatus('Por favor inicia sesión para chatear', 'error');
           return;
         }
         const token = await user.getIdToken();
-
         const resp = await fetchWithTimeout('/api/chatWithAI', {
           method: 'POST',
           headers: {
@@ -494,16 +405,15 @@
             'Authorization': `Bearer ${token}`
           },
           body: JSON.stringify({
-            message,
-            category: "documentos", // para que sepas que es la sección
+            message: msg,
+            category: "documentos",  // Puede ser 'documentos'
             conversationHistory
           })
         }, 10000);
-        if (!resp.ok) throw new Error('Error en el servidor');
-
+        if (!resp.ok) throw new Error('Error del servidor');
         const data = await resp.json();
-        typingIndicator.remove();
 
+        typing.remove();
         if (data.response) {
           addMessage(data.response, 'assistant');
           conversationHistory.push({ role: 'assistant', content: data.response });
@@ -513,7 +423,7 @@
         }
       } catch (err) {
         console.error(err);
-        typingIndicator?.remove();
+        typing?.remove();
         if (retryAttempts < MAX_RETRIES) {
           retryAttempts++;
           await new Promise(r => setTimeout(r, RETRY_DELAY * retryAttempts));
@@ -521,12 +431,12 @@
           return;
         }
         showConnectionStatus('Error al enviar mensaje', 'error');
-        addMessage('Lo siento, ocurrió un error. Intenta de nuevo.', 'assistant');
+        addMessage('Lo siento, ocurrió un error. Inténtalo más tarde.', 'assistant');
         retryAttempts = 0;
       } finally {
         isProcessing = false;
         input.disabled = false;
-        sendBtn.disabled = false;
+        btn.disabled = false;
         input.focus();
       }
     }
@@ -544,7 +454,7 @@
       this.style.height = Math.min(this.scrollHeight, 150) + 'px';
     });
 
-    /* ========== Documentos LÓGICA ========== */
+    /* ========== MULTIPLE DOCS LÓGICA ========== */
     const fileInput = document.getElementById('fileInput');
     const analyzeBtn = document.getElementById('analyzeBtn');
     const fileLabelText = document.getElementById('fileLabelText');
@@ -553,20 +463,19 @@
     const queryInput = document.getElementById('queryInput');
 
     fileInput.addEventListener('change', () => {
-      if (fileInput.files && fileInput.files[0]) {
-        const fileName = fileInput.files[0].name;
-        fileLabelText.textContent = `Archivo seleccionado: ${fileName}`;
+      if (fileInput.files && fileInput.files.length > 0) {
         analyzeBtn.disabled = false;
-        selectedFileName.textContent = fileName;
+        fileLabelText.textContent = `Archivos seleccionados: ${fileInput.files.length}`;
+        selectedFileName.textContent = Array.from(fileInput.files).map(f => f.name).join(', ');
       } else {
-        fileLabelText.textContent = 'Haz clic o arrastra un archivo aquí';
+        fileLabelText.textContent = 'Haz clic o arrastra archivos aquí';
         analyzeBtn.disabled = true;
         selectedFileName.textContent = '';
       }
     });
 
     analyzeBtn.addEventListener('click', async () => {
-      if (!fileInput.files || !fileInput.files[0]) return;
+      if (!fileInput.files || fileInput.files.length === 0) return;
       try {
         const user = auth.currentUser;
         if (!user) {
@@ -576,7 +485,10 @@
         const token = await user.getIdToken();
 
         const formData = new FormData();
-        formData.append('document', fileInput.files[0]);
+        // Agregamos todos los archivos
+        for (let i = 0; i < fileInput.files.length; i++) {
+          formData.append('documents', fileInput.files[i]);
+        }
         formData.append('query', queryInput.value.trim());
 
         const resp = await fetch('/api/analyzeDocument', {
@@ -587,26 +499,17 @@
         const data = await resp.json();
         if (resp.ok) {
           docResult.style.display = 'block';
-          docResult.textContent = data.response;
+          docResult.textContent = data.response || 'Sin respuesta.';
         } else {
-          alert(data.error || 'Error al analizar el documento');
+          alert(data.error || 'Error al analizar documentos');
         }
       } catch (err) {
-        console.error("Error al analizar documento:", err);
-        alert('Error al procesar el documento.');
+        console.error("Error al analizar documentos:", err);
+        alert('Error al procesar los documentos.');
       }
     });
 
-    /* ========== Manejo de Estados ========== */
-    window.addEventListener('online', () => showConnectionStatus('Conexión restaurada', 'success'));
-    window.addEventListener('offline', () => showConnectionStatus('Sin conexión', 'error'));
-    window.addEventListener('beforeunload', (e) => {
-      if (isProcessing || msgInput.value.trim()) {
-        e.preventDefault();
-        e.returnValue = '';
-      }
-    });
-
+    /* ========== UTILS ========== */
     function showConnectionStatus(message, type) {
       const existingStatus = document.querySelector('.connection-status');
       if (existingStatus) existingStatus.remove();
@@ -623,9 +526,21 @@
 
     function redirectToWhatsApp() {
       const phoneNumber = '+56999999999';
-      const text = encodeURIComponent('Hola, necesito ayuda con mis documentos. ¿Podrías asesorarme?');
+      const text = encodeURIComponent('Hola, necesito ayuda con varios documentos. ¿Podrías asesorarme?');
       window.open(`https://wa.me/${phoneNumber}?text=${text}`, '_blank');
     }
+
+    // Conexión
+    window.addEventListener('online', () => showConnectionStatus('Conexión restaurada', 'success'));
+    window.addEventListener('offline', () => showConnectionStatus('Sin conexión', 'error'));
+
+    // Prevenir cierre accidental
+    window.addEventListener('beforeunload', (e) => {
+      if (isProcessing || msgInput.value.trim()) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    });
   </script>
 </body>
 </html>
