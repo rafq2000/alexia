@@ -223,6 +223,39 @@
       background: #fff5f5;
     }
 
+    /* Contenedor de re-pregunta */
+    #followUpContainer {
+      margin-top: 30px;
+      display: none;
+    }
+    #followUpContainer h3 {
+      margin-bottom: 10px;
+      color: var(--primary);
+      font-size: 18px;
+    }
+    #followUpInput {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      font-size: 15px;
+      resize: vertical;
+      min-height: 60px;
+      margin-bottom: 10px;
+    }
+    #followUpBtn {
+      padding: 10px 20px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    #followUpBtn:hover {
+      background: var(--primary);
+    }
+
     .whatsapp-button {
       position: fixed;
       bottom: 20px;
@@ -253,9 +286,11 @@
       body {
         padding: 10px;
       }
+
       .container {
         padding: 20px;
       }
+
       .header {
         flex-direction: column;
         gap: 15px;
@@ -322,6 +357,14 @@
       </div>
       <div id="analysisResult" class="analysis-result"></div>
     </div>
+
+    <!-- CONTENEDOR PARA RE-PREGUNTAR -->
+    <div id="followUpContainer">
+      <hr>
+      <h3>¿Tienes más dudas sobre lo que te respondió AbogadApp?</h3>
+      <textarea id="followUpInput" placeholder="Escribe tu pregunta adicional aquí..."></textarea>
+      <button id="followUpBtn">Preguntar</button>
+    </div>
   </div>
 
   <!-- Botón WhatsApp -->
@@ -360,8 +403,13 @@
     const resultContainer = document.getElementById('resultContainer');
     const loadingSpinner = document.getElementById('loadingSpinner');
     const analysisResult = document.getElementById('analysisResult');
+    const followUpContainer = document.getElementById('followUpContainer');
+    const followUpInput = document.getElementById('followUpInput');
+    const followUpBtn = document.getElementById('followUpBtn');
 
-    // Mostrar archivos seleccionados
+    // Para guardar la última respuesta y permitir re-preguntar
+    let lastAnalysis = '';
+
     fileInput.addEventListener('change', function(e) {
       if (e.target.files.length > 0) {
         analyzeBtn.disabled = false;
@@ -397,36 +445,34 @@
       fileList.innerHTML = '';
       analyzeBtn.disabled = true;
       resultContainer.style.display = 'none';
+      followUpContainer.style.display = 'none';
+      lastAnalysis = '';
     }
 
-    // Lógica mejorada al hacer clic en "Analizar Documentos"
     analyzeBtn.addEventListener('click', async function() {
       if (!fileInput.files.length) return;
 
       try {
-        // Mostrar spinner y desactivar botón
+        alert('Analizando tu(s) documento(s). Por favor, no cierres la página hasta recibir la respuesta.');
         resultContainer.style.display = 'block';
         loadingSpinner.style.display = 'block';
         analysisResult.style.display = 'none';
         analyzeBtn.disabled = true;
         analyzeBtn.textContent = 'Analizando...';
 
-        // Verificar usuario
         const user = auth.currentUser;
         if (!user) {
-          throw new Error('Por favor inicia sesión para continuar');
+          alert('Por favor inicia sesión para continuar');
+          return;
         }
         const token = await user.getIdToken();
 
-        // Preparar formData
         const formData = new FormData();
         Array.from(fileInput.files).forEach(file => {
           formData.append('document', file);
         });
         const queryInput = document.getElementById('queryInput');
-        if (queryInput.value.trim()) {
-          formData.append('query', queryInput.value);
-        }
+        formData.append('query', queryInput.value || 'Por favor, explica estos documentos');
 
         console.log('Enviando documentos para análisis...');
         const response = await fetch('/api/analyzeDocument', {
@@ -443,11 +489,17 @@
           throw new Error(result.error || result.details || 'Error al procesar los documentos');
         }
 
-        // Ocultar spinner, mostrar resultado
+        // Se recibió respuesta correcta
         loadingSpinner.style.display = 'none';
         analysisResult.style.display = 'block';
-        analysisResult.innerHTML = `<div style="white-space: pre-wrap;">${result.response}</div>`;
+        analysisResult.innerHTML = `<p style="white-space: pre-wrap;">${result.response}</p>`;
         analysisResult.scrollIntoView({ behavior: 'smooth' });
+
+        // Guardamos la respuesta para re-preguntar
+        lastAnalysis = result.response;
+
+        // Mostramos contenedor de re-pregunta
+        followUpContainer.style.display = 'block';
 
       } catch (error) {
         console.error('Error:', error);
@@ -461,6 +513,66 @@
       } finally {
         analyzeBtn.disabled = false;
         analyzeBtn.textContent = 'Analizar Documentos';
+      }
+    });
+
+    // Botón de re-preguntar
+    followUpBtn.addEventListener('click', async function() {
+      const followUpQuestion = followUpInput.value.trim();
+      if (!followUpQuestion) return;
+
+      try {
+        const user = auth.currentUser;
+        if (!user) {
+          alert('Por favor inicia sesión para continuar');
+          return;
+        }
+        const token = await user.getIdToken();
+
+        // Mostramos un pequeño "Cargando" o algo similar
+        followUpBtn.disabled = true;
+        followUpBtn.textContent = 'Consultando...';
+
+        // Reutilizamos la respuesta anterior como parte de la "conversación"
+        const conversationHistory = [
+          { role: 'assistant', content: lastAnalysis },
+          { role: 'user', content: followUpQuestion }
+        ];
+
+        // Llamamos a /api/chatWithAI para la re-pregunta
+        const chatResp = await fetch('/api/chatWithAI', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            message: followUpQuestion,
+            conversationHistory
+          })
+        });
+        const chatData = await chatResp.json();
+
+        if (!chatResp.ok) {
+          throw new Error(chatData.error || 'Error al procesar la consulta');
+        }
+
+        // Agregamos la nueva pregunta y respuesta al final
+        analysisResult.innerHTML += `
+          <hr>
+          <p><strong>Pregunta adicional:</strong> ${followUpQuestion}</p>
+          <p style="white-space: pre-wrap;">${chatData.response}</p>
+        `;
+        analysisResult.scrollIntoView({ behavior: 'smooth' });
+
+        // Actualizamos "lastAnalysis" para seguir encadenando re-preguntas
+        lastAnalysis = chatData.response;
+      } catch (err) {
+        console.error(err);
+        analysisResult.innerHTML += `<div class="error-message">Error: ${err.message}</div>`;
+      } finally {
+        followUpBtn.disabled = false;
+        followUpBtn.textContent = 'Preguntar';
       }
     });
 
