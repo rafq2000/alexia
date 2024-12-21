@@ -98,6 +98,13 @@
       gap: 15px;
     }
 
+    .main-options {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
     .option-item {
       display: flex;
       align-items: center;
@@ -106,6 +113,38 @@
       border-radius: 10px;
       cursor: pointer;
       transition: all 0.3s ease;
+    }
+
+    .option-item.active {
+      background: linear-gradient(145deg, var(--primary), var(--accent));
+      border: none;
+      color: white;
+    }
+
+    .option-item.active:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(44, 115, 210, 0.2);
+    }
+
+    .option-item.active .option-title,
+    .option-item.active .option-description {
+      color: white;
+    }
+
+    .option-item.document-option {
+      background: linear-gradient(145deg, #34495e, #2c3e50);
+      border: none;
+      color: white;
+    }
+
+    .option-item.document-option:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(52, 73, 94, 0.2);
+    }
+
+    .option-item.document-option .option-title,
+    .option-item.document-option .option-description {
+      color: white;
     }
 
     .option-item:hover {
@@ -146,12 +185,12 @@
       color: #666;
     }
 
-    /* <-- NUEVO: estilos para opciones inactivas */
     .option-item.inactive {
       opacity: 0.5;
       cursor: not-allowed;
-      transform: none; /* para que no se mueva al hacer hover */
+      transform: none;
     }
+
     .option-item.inactive:hover {
       border-color: var(--border);
       background-color: white;
@@ -187,7 +226,6 @@
       }
     }
 
-    /* <-- NUEVO: media query para pantallas pequeñas */
     @media (max-width: 600px) {
       .container {
         padding: 20px;
@@ -213,7 +251,6 @@
       }
     }
 
-    /* <-- OPCIONAL: media query aún más pequeña */
     @media (max-width: 400px) {
       .option-title {
         font-size: 1rem;
@@ -240,20 +277,33 @@
   <div class="container">
     <h1 class="title">¿Qué tipo de ayuda necesitas?</h1>
     
-    <div class="options-container">
-      <!-- ÚNICA opción activa -->
-      <label class="option-item" onclick="selectOption('deudas')">
+    <div class="main-options">
+      <!-- Opción de Chat - Activa -->
+      <label class="option-item active" onclick="selectOption('deudas')">
         <input type="radio" name="category" value="deudas">
-        <div class="option-icon">💰</div>
+        <div class="option-icon">💬</div>
         <div class="option-content">
-          <div class="option-title">Tengo problemas con deudas o bancos</div>
+          <div class="option-title">Consultar con el Asistente Legal</div>
           <div class="option-description">
             Deudas bancarias, créditos, repactaciones, quiebra personal
           </div>
         </div>
       </label>
 
-      <!-- El resto está 'inactive' y no hace nada al click -->
+      <!-- Nueva opción de Documentos -->
+      <label class="option-item document-option" onclick="window.location.href='/document-chat'">
+        <div class="option-icon">📄</div>
+        <div class="option-content">
+          <div class="option-title">Analizar Documentos</div>
+          <div class="option-description">
+            Sube contratos, resoluciones o documentos legales para recibir una explicación clara y simple
+          </div>
+        </div>
+      </label>
+    </div>
+
+    <div class="options-container">
+      <!-- Opciones inactivas -->
       <label class="option-item inactive" onclick="optionInDevelopment()">
         <input type="radio" name="category" value="familia">
         <div class="option-icon">👨‍👩‍👧‍👦</div>
@@ -420,13 +470,14 @@
           sessionStorage.setItem('selectedCategory', category);
           window.location.href = '/chat';
         } catch (error) {
+          console.error
+        } catch (error) {
           console.error('Error al redireccionar:', error);
           toggleLoading(false);
         }
       }
     }
 
-    /* <-- NUEVO: función que avisa que está en desarrollo */
     function optionInDevelopment() {
       alert("Esta opción está en desarrollo. ¡Pronto estará disponible!");
     }
@@ -447,4 +498,4 @@
     });
   </script>
 </body>
-</html>
+</html>  
