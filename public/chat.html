@@ -21,6 +21,8 @@
             --dark: #333;
             --light: #f8f9fa;
             --border: #dee2e6;
+            --message-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            --hover-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
 
         * {
@@ -31,30 +33,51 @@
         }
 
         body {
-            background: var(--background);
+            background: linear-gradient(135deg, var(--background) 0%, #ffffff 100%);
             min-height: 100vh;
             padding: 20px;
-        }
-
-        .chat-container {
-            max-width: 800px;
-            margin: 20px auto;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             display: flex;
             flex-direction: column;
-            height: calc(100vh - 100px);
         }
 
-        .chat-header {
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .app-header {
+            background: white;
+            padding: 15px 30px;
+            border-radius: 15px;
+            box-shadow: var(--message-shadow);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px;
-            border-bottom: 1px solid var(--border);
-            background-color: white;
-            border-radius: 10px 10px 0 0;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+        }
+
+        .brand-name {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--primary);
+            letter-spacing: -0.5px;
         }
 
         .user-info {
@@ -70,96 +93,209 @@
         }
 
         .logout-btn {
-            padding: 8px 16px;
+            padding: 10px 20px;
             background: var(--accent);
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            font-size: 14px;
         }
 
         .logout-btn:hover {
             background: var(--primary);
+            transform: translateY(-1px);
+            box-shadow: var(--message-shadow);
+        }
+
+        .chat-container {
+            flex: 1;
+            background: white;
+            border-radius: 15px;
+            box-shadow: var(--message-shadow);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid rgba(0,0,0,0.05);
+            position: relative;
         }
 
         .chat-messages {
             flex: 1;
             overflow-y: auto;
-            padding: 20px;
+            padding: 30px;
+            scroll-behavior: smooth;
         }
 
         .message {
-            margin-bottom: 20px;
-            max-width: 80%;
+            margin-bottom: 25px;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: messageAppear 0.3s forwards;
+        }
+
+        @keyframes messageAppear {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .message.user-message {
             margin-left: auto;
+            max-width: 80%;
+        }
+
+        .message.assistant-message {
+            margin-right: auto;
+            max-width: 80%;
         }
 
         .message-content {
-            padding: 12px 16px;
-            border-radius: 10px;
-            display: inline-block;
-            word-wrap: break-word;
+            padding: 15px 20px;
+            border-radius: 15px;
+            box-shadow: var(--message-shadow);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .message-content:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--hover-shadow);
         }
 
         .user-message .message-content {
             background: var(--accent);
             color: white;
+            border-top-right-radius: 5px;
         }
 
         .assistant-message .message-content {
             background: var(--light);
             color: var(--dark);
+            border-top-left-radius: 5px;
         }
 
         .chat-input {
-            padding: 20px;
+            padding: 20px 30px;
+            background: white;
             border-top: 1px solid var(--border);
             display: flex;
-            gap: 10px;
-            background: white;
-            border-radius: 0 0 10px 10px;
+            gap: 15px;
+            align-items: flex-end;
         }
 
         .chat-input textarea {
             flex: 1;
-            padding: 12px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
+            padding: 15px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
             resize: none;
-            font-size: 14px;
-            line-height: 1.4;
-            height: 45px;
-            max-height: 120px;
+            font-size: 15px;
+            line-height: 1.5;
+            min-height: 54px;
+            max-height: 150px;
+            transition: all 0.3s ease;
         }
 
         .chat-input textarea:focus {
             outline: none;
             border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(44,115,210,0.1);
         }
 
         .send-btn {
-            padding: 0 20px;
+            padding: 0 25px;
+            height: 54px;
             background: var(--accent);
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             cursor: pointer;
-            height: 45px;
+            transition: all 0.3s ease;
+            font-size: 15px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .send-btn:hover:not(:disabled) {
+            background: var(--primary);
+            transform: translateY(-1px);
+            box-shadow: var(--message-shadow);
         }
 
         .send-btn:disabled {
             background: var(--border);
             cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .typing-indicator {
+            display: inline-flex;
+            align-items: center;
+            background: var(--light);
+            padding: 15px 20px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: var(--message-shadow);
+            animation: messageAppear 0.3s forwards;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 5px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
+            opacity: 0.6;
+        }
+
+        .typing-dot:nth-child(1) { animation: typing 1.4s infinite; }
+        .typing-dot:nth-child(2) { animation: typing 1.4s infinite 0.2s; }
+        .typing-dot:nth-child(3) { animation: typing 1.4s infinite 0.4s; }
+
+        @keyframes typing {
+            0%, 100% { transform: translateY(0); opacity: 0.6; }
+            50% { transform: translateY(-5px); opacity: 1; }
+        }
+
+        .connection-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            animation: statusAppear 0.3s forwards;
+            z-index: 1000;
+        }
+
+        .connection-status.success {
+            background: var(--success);
+        }
+
+        .connection-status.error {
+            background: var(--error);
+        }
+
+        @keyframes statusAppear {
+            from { transform: translateY(-100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
 
         .whatsapp-button {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
+            bottom: 30px;
+            right: 30px;
             width: 60px;
             height: 60px;
             background: #25D366;
@@ -168,37 +304,108 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            transition: transform 0.3s;
+            transition: all 0.3s ease;
+            box-shadow: var(--hover-shadow);
+            z-index: 100;
         }
 
         .whatsapp-button:hover {
-            transform: scale(1.1);
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 8px 20px rgba(37,211,102,0.3);
         }
 
         .whatsapp-icon {
-            width: 35px;
-            height: 35px;
+            width: 30px;
+            height: 30px;
+            filter: brightness(0) invert(1);
+        }
+
+        /* Scrollbar personalizado */
+        .chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: #666;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .main-container {
+                gap: 10px;
+            }
+
+            .app-header {
+                padding: 10px 15px;
+            }
+
+            .brand-name {
+                font-size: 20px;
+            }
+
+            .chat-messages {
+                padding: 20px;
+            }
+
+            .chat-input {
+                padding: 15px;
+            }
+
+            .message {
+                max-width: 90%;
+            }
+
+            .whatsapp-button {
+                bottom: 20px;
+                right: 20px;
+                width: 50px;
+                height: 50px;
+            }
+
+            .whatsapp-icon {
+                width: 25px;
+                height: 25px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="chat-container">
-        <div class="chat-header">
+    <div class="main-container">
+        <header class="app-header">
+            <div class="brand">
+                <img src="/assets/logo.png" alt="AbogadApp" class="logo" onclick="window.location.href='/menu'">
+                <span class="brand-name">AbogadApp</span>
+            </div>
             <div class="user-info">
                 <span id="userName" class="user-name">Ricardo Farias</span>
                 <button id="logoutButton" class="logout-btn">Cerrar sesión</button>
             </div>
-        </div>
+        </header>
 
-        <div id="chatMessages" class="chat-messages"></div>
-
-        <div class="chat-input">
-            <textarea 
-                id="messageInput" 
-                placeholder="Escribe tu mensaje aquí..."
-                rows="1"></textarea>
-            <button id="sendButton" class="send-btn">Enviar</button>
+        <div class="chat-container">
+            <div id="chatMessages" class="chat-messages"></div>
+            <div class="chat-input">
+                <textarea 
+                    id="messageInput" 
+                    placeholder="Escribe tu mensaje aquí..."
+                    rows="1"></textarea>
+                <button id="sendButton" class="send-btn">
+                    Enviar
+                </button>
+            </div>
         </div>
     </div>
 
@@ -211,6 +418,9 @@
         let selectedCategory;
         let isProcessing = false;
         let conversationHistory = [];
+        let retryAttempts = 0;
+        const MAX_RETRIES = 3;
+        const RETRY_DELAY = 1000;
 
         // Configuración de Firebase
         const firebaseConfig = {
@@ -230,51 +440,98 @@
             auth = firebase.auth();
         } catch (error) {
             console.error("Error al inicializar Firebase:", error);
+            showConnectionStatus('Error de inicialización', 'error');
         }
 
         // Verificar autenticación
-        auth.onAuthStateChanged((user) => {
+        auth.onAuthStateChanged(async (user) => {
             if (!user) {
                 window.location.href = '/';
                 return;
             }
 
+            document.getElementById('userName').textContent = user.displayName || user.email || 'Usuario';
+            
             selectedCategory = sessionStorage.getItem('selectedCategory');
             if (!selectedCategory) {
                 window.location.href = '/menu';
                 return;
             }
 
-            document.getElementById('userName').textContent = user.displayName || user.email || 'Usuario';
+            await checkAPIConnection();
             initializeChat();
         });
 
-        function initializeChat() {
-            const welcomeMessage = `Hola, veo que tienes consultas sobre problemas con deudas o bancos. Por favor, responde estas preguntas para ayudarte mejor:
-            
-¿Qué tipo de deuda tienes? (por ejemplo: bancaria, tarjeta de crédito, préstamo personal u otra)`;
-            addMessage(welcomeMessage, 'assistant');
+        async function checkAPIConnection() {
+            try {
+                const token = await auth.currentUser.getIdToken();
+                const response = await fetchWithTimeout('/api/health', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('API no disponible');
+                }
+                
+                showConnectionStatus('Conectado', 'success');
+            } catch (error) {
+                showConnectionStatus('Error de conexión', 'error');
+                throw error;
+            }
         }
 
-        async function sendMessage() {
-            if (isProcessing) return;
+        function initializeChat() {
+            const welcomeMessage = `Hola, veo que tienes consultas sobre problemas con deudas o bancos. Por favor, responde estas preguntas para ayudarte mejor:
+
+¿Qué tipo de deuda tienes? (por ejemplo: bancaria, tarjeta de crédito, préstamo personal u otra)`;
+            addMessage(welcomeMessage, 'assistant');
+            conversationHistory.push({ role: 'assistant', content: welcomeMessage });
+        }
+
+        async function fetchWithTimeout(url, options, timeout = 8000) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), timeout);
+            
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                return response;
+            } catch (error) {
+                clearTimeout(timeoutId);
+                throw error;
+            }
+        }
+
+        async function sendMessage(retry = false) {
+            if (isProcessing && !retry) return;
 
             const input = document.getElementById('messageInput');
             const message = input.value.trim();
             
-            if (!message) return;
+            if (!message && !retry) return;
             
             isProcessing = true;
-            input.disabled = true;
-            document.getElementById('sendButton').disabled = true;
+            const sendButton = document.getElementById('sendButton');
+            sendButton.disabled = true;
             
-            input.value = '';
-            addMessage(message, 'user');
-            conversationHistory.push({ role: 'user', content: message });
+            if (!retry) {
+                input.value = '';
+                input.style.height = '54px';
+                addMessage(message, 'user');
+                conversationHistory.push({ role: 'user', content: message });
+            }
+
+            const typingIndicator = showTypingIndicator();
 
             try {
+                await checkAPIConnection();
                 const token = await auth.currentUser.getIdToken();
-                const response = await fetch('/api/chatWithAI', {
+                const response = await fetchWithTimeout('/api/chatWithAI', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -292,31 +549,53 @@
                 }
 
                 const data = await response.json();
+                typingIndicator.remove();
+
                 if (data.response) {
                     addMessage(data.response, 'assistant');
                     conversationHistory.push({ role: 'assistant', content: data.response });
                     await saveMessageToFirestore(message, 'user');
                     await saveMessageToFirestore(data.response, 'assistant');
+                    retryAttempts = 0;
+                } else {
+                    throw new Error('Respuesta vacía del servidor');
                 }
             } catch (error) {
                 console.error('Error:', error);
+                typingIndicator?.remove();
+
+                if (retryAttempts < MAX_RETRIES) {
+                    retryAttempts++;
+                    await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * retryAttempts));
+                    sendMessage(true);
+                    return;
+                }
+
+                showConnectionStatus('Error al enviar mensaje', 'error');
                 addMessage('Lo siento, ha ocurrido un error. Por favor, intenta nuevamente.', 'assistant');
+                retryAttempts = 0;
             } finally {
                 isProcessing = false;
                 input.disabled = false;
-                document.getElementById('sendButton').disabled = false;
-                input.focus();
-                adjustTextareaHeight(input);
+                sendButton.disabled = false;
+                if (!retry) input.focus();
             }
         }
 
-        function addMessage(text, sender) {
+        function showTypingIndicator() {
             const messagesDiv = document.getElementById('chatMessages');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${sender}-message`;
-            messageDiv.innerHTML = `<div class="message-content">${text}</div>`;
-            messagesDiv.appendChild(messageDiv);
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'typing-indicator';
+            typingDiv.innerHTML = `
+                <div class="typing-dots">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            `;
+            messagesDiv.appendChild(typingDiv);
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            return typingDiv;
         }
 
         async function saveMessageToFirestore(message, sender) {
@@ -337,15 +616,38 @@
             }
         }
 
-        function adjustTextareaHeight(textarea) {
-            textarea.style.height = '45px';
-            textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+        function addMessage(text, sender) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+            messageDiv.innerHTML = `<div class="message-content">${text}</div>`;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function showConnectionStatus(message, type) {
+            const existingStatus = document.querySelector('.connection-status');
+            if (existingStatus) {
+                existingStatus.remove();
+            }
+
+            const statusDiv = document.createElement('div');
+            statusDiv.className = `connection-status ${type}`;
+            statusDiv.textContent = message;
+            document.body.appendChild(statusDiv);
+
+            setTimeout(() => {
+                statusDiv.style.animation = 'statusDisappear 0.3s forwards';
+                setTimeout(() => statusDiv.remove(), 300);
+            }, 3000);
         }
 
         // Event Listeners
         const messageInput = document.getElementById('messageInput');
+
         messageInput.addEventListener('input', function() {
-            adjustTextareaHeight(this);
+            this.style.height = '54px';
+            this.style.height = Math.min(this.scrollHeight, 150) + 'px';
         });
 
         messageInput.addEventListener('keydown', function(e) {
@@ -355,7 +657,7 @@
             }
         });
 
-        document.getElementById('sendButton').addEventListener('click', sendMessage);
+        document.getElementById('sendButton').addEventListener('click', () => sendMessage());
 
         document.getElementById('logoutButton').addEventListener('click', async () => {
             try {
@@ -363,6 +665,7 @@
                 window.location.href = '/';
             } catch (error) {
                 console.error("Error al cerrar sesión:", error);
+                showConnectionStatus('Error al cerrar sesión', 'error');
             }
         });
 
@@ -371,6 +674,23 @@
             const message = encodeURIComponent('Hola, necesito ayuda legal profesional sobre problemas con deudas o bancos. ¿Podría asesorarme?');
             window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
         }
+
+        // Manejo de estado de conexión
+        window.addEventListener('online', () => {
+            showConnectionStatus('Conexión restaurada', 'success');
+        });
+
+        window.addEventListener('offline', () => {
+            showConnectionStatus('Sin conexión', 'error');
+        });
+
+        // Prevenir cierre accidental
+        window.addEventListener('beforeunload', (e) => {
+            if (isProcessing || messageInput.value.trim()) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        });
     </script>
 </body>
 </html>
