@@ -47,13 +47,13 @@
 
     .header {
       background-color: white;
-      padding: 15px 30px;
+      padding: 20px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      border-radius: 10px;
-      margin-bottom: 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      margin-bottom: 30px;
+      border-radius: 10px;
     }
 
     .brand {
@@ -102,13 +102,13 @@
 
     .description {
       color: var(--dark);
-      margin-bottom: 25px;
+      margin-bottom: 20px;
       line-height: 1.5;
     }
 
-    .upload-section {
+    .file-upload {
+      margin: 20px 0;
       text-align: center;
-      margin: 30px 0;
     }
 
     .select-files-btn {
@@ -140,7 +140,7 @@
       align-items: center;
     }
 
-    .file-info small {
+    .file-item small {
       color: #666;
     }
 
@@ -169,6 +169,7 @@
       cursor: pointer;
       font-size: 16px;
       transition: all 0.3s ease;
+      width: 100%;
     }
 
     .analyze-btn:disabled {
@@ -180,27 +181,24 @@
       background: var(--primary);
     }
 
-    .response-container {
-      margin-top: 20px;
-      background: #f8f9fa;
-      border-radius: 8px;
-      padding: 20px;
+    .result-container {
+      margin-top: 30px;
       display: none;
     }
 
-    .loading-indicator {
+    .loading-spinner {
       text-align: center;
-      padding: 20px;
+      margin: 20px 0;
     }
 
     .spinner {
       width: 40px;
       height: 40px;
-      margin: 10px auto;
       border: 4px solid #f3f3f3;
       border-top: 4px solid var(--accent);
       border-radius: 50%;
       animation: spin 1s linear infinite;
+      margin: 0 auto;
     }
 
     @keyframes spin {
@@ -209,8 +207,20 @@
     }
 
     .analysis-result {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 8px;
       white-space: pre-wrap;
       line-height: 1.6;
+      margin-top: 20px;
+    }
+
+    .error-message {
+      color: var(--error);
+      padding: 10px;
+      border-radius: 5px;
+      margin-top: 10px;
+      background: #fff5f5;
     }
 
     .whatsapp-button {
@@ -251,6 +261,7 @@
       .header {
         flex-direction: column;
         gap: 15px;
+        text-align: center;
       }
     }
   </style>
@@ -274,7 +285,7 @@
       AbogadApp te ayudará a interpretarlos y explicarlos en términos simples.
     </p>
 
-    <div class="upload-section">
+    <div class="file-upload">
       <button class="select-files-btn" onclick="document.getElementById('fileInput').click()">
         Seleccionar Archivos
       </button>
@@ -299,8 +310,8 @@
       Analizar Documentos
     </button>
 
-    <div id="responseContainer" class="response-container">
-      <div id="loadingIndicator" class="loading-indicator">
+    <div id="resultContainer" class="result-container">
+      <div id="loadingSpinner" class="loading-spinner">
         <div class="spinner"></div>
         <p>Analizando documentos...</p>
       </div>
@@ -313,6 +324,7 @@
   </div>
 
   <script>
+    // Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyD242Qba3E-UgeA1UPXp9PgmjJK_Xg6VKY",
       authDomain: "deudazero-b8e33.firebaseapp.com",
@@ -340,8 +352,8 @@
     const fileInput = document.getElementById('fileInput');
     const analyzeBtn = document.getElementById('analyzeBtn');
     const fileList = document.getElementById('fileList');
-    const responseContainer = document.getElementById('responseContainer');
-    const loadingIndicator = document.getElementById('loadingIndicator');
+    const resultContainer = document.getElementById('resultContainer');
+    const loadingSpinner = document.getElementById('loadingSpinner');
     const analysisResult = document.getElementById('analysisResult');
 
     fileInput.addEventListener('change', function(e) {
@@ -378,16 +390,15 @@
       fileInput.value = '';
       fileList.innerHTML = '';
       analyzeBtn.disabled = true;
-      responseContainer.style.display = 'none';
+      resultContainer.style.display = 'none';
     }
 
     analyzeBtn.addEventListener('click', async function() {
       if (!fileInput.files.length) return;
 
       try {
-        // Mostrar loading y ocultar resultado anterior
-        responseContainer.style.display = 'block';
-        loadingIndicator.style.display = 'block';
+        resultContainer.style.display = 'block';
+        loadingSpinner.style.display = 'block';
         analysisResult.style.display = 'none';
         analyzeBtn.disabled = true;
 
@@ -418,18 +429,22 @@
         const result = await response.json();
 
         if (response.ok) {
-          loadingIndicator.style.display = 'none';
+          loadingSpinner.style.display = 'none';
           analysisResult.style.display = 'block';
-          analysisResult.innerHTML = `<strong>Análisis:</strong><br><br>${result.response}`;
+          analysisResult.innerHTML = `<p style="white-space: pre-wrap;">${result.response}</p>`;
           analysisResult.scrollIntoView({ behavior: 'smooth' });
         } else {
           throw new Error(result.error || 'Error al analizar documentos');
         }
       } catch (error) {
         console.error('Error:', error);
-        loadingIndicator.style.display = 'none';
+        loadingSpinner.style.display = 'none';
         analysisResult.style.display = 'block';
-        analysisResult.innerHTML = `<div style="color: var(--error)">Error: ${error.message || 'Error al procesar los documentos'}</div>`;
+        analysisResult.innerHTML = `
+          <div class="error-message">
+            Error: ${error.message || 'Error al procesar los documentos'}
+          </div>
+        `;
       } finally {
         analyzeBtn.disabled = false;
       }
