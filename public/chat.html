@@ -340,54 +340,68 @@
         }
 
         async function sendMessage() {
-            const input = document.getElementById('messageInput');
-            const message = input.value.trim();
-            
-            if (!message) return;
-            
-            input.value = '';
-            addMessage(message, 'user');
+    const input = document.getElementById('messageInput');
+    const message = input.value.trim();
+    
+    if (!message) return;
+    
+    // Deshabilitar input y botón mientras se procesa
+    input.disabled = true;
+    document.getElementById('sendButton').disabled = true;
+    
+    input.value = '';
+    addMessage(message, 'user');
 
-            // Agregar indicador de pensando
-            const thinkingDiv = document.createElement('div');
-            thinkingDiv.className = 'thinking';
-            thinkingDiv.innerHTML = `
-                <div class="thinking-dots">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </div>`;
-            document.getElementById('chatMessages').appendChild(thinkingDiv);
+    // Agregar indicador de pensando
+    const thinkingDiv = document.createElement('div');
+    thinkingDiv.className = 'thinking';
+    thinkingDiv.innerHTML = `
+        <div class="thinking-dots">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>`;
+    document.getElementById('chatMessages').appendChild(thinkingDiv);
 
-            try {
-                const token = await auth.currentUser.getIdToken();
-                const response = await fetch('/api/chatWithAI', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({
-                        message,
-                        category: selectedCategory
-                    })
-                });
+    try {
+        const token = await auth.currentUser.getIdToken();
+        const response = await fetch('/api/chatWithAI', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                message,
+                category: selectedCategory
+            })
+        });
 
-                // Remover indicador de pensando
-                thinkingDiv.remove();
+        // Remover indicador de pensando
+        thinkingDiv.remove();
 
-                if (response.ok) {
-                    const data = await response.json();
-                    addMessage(data.response, 'assistant');
-                } else {
-                    throw new Error('Error en la respuesta del servidor');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                thinkingDiv.remove();
-                addMessage('Lo siento, ha ocurrido un error. Por favor, intenta nuevamente.', 'assistant');
-            }
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Error en el servidor');
         }
+
+        const data = await response.json();
+        if (data.response) {
+            addMessage(data.response, 'assistant');
+        } else {
+            throw new Error('Respuesta vacía del servidor');
+        }
+    } catch (error) {
+        console.error('Error en chat:', error);
+        thinkingDiv?.remove();
+        addMessage('Lo siento, ha ocurrido un error. Por favor, intenta nuevamente.', 'assistant');
+    } finally {
+        // Rehabilitar input y botón
+        input.disabled = false;
+        document.getElementById('sendButton').disabled = false;
+        input.focus();
+    }
+}
 
         function addMessage(text, sender) {
             const messagesDiv = document.getElementById('chatMessages');

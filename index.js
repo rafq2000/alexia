@@ -75,28 +75,27 @@ const authenticateUser = async (req, res, next) => {
 app.post('/api/chatWithAI', authenticateUser, async (req, res) => {
     try {
         const { message, category } = req.body;
+        
+        if (!message || !category) {
+            return res.status(400).json({ error: 'Mensaje o categoría faltante' });
+        }
 
-        // Incrementar contador de consultas
-        await db.collection('stats').doc('global').set({
-            totalConsultas: admin.firestore.FieldValue.increment(1),
-            ultimaActualizacion: admin.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
+        // Agregar logging para debug
+        console.log('Procesando mensaje:', { message, category });
 
-        // Guardar la consulta
-        await db.collection('consultas').add({
-            userId: req.user.uid,
-            mensaje: message,
-            categoria: category,
-            fecha: admin.firestore.FieldValue.serverTimestamp()
-        });
-
-        // Generar respuesta con OpenAI
         const completion = await openai.chat.completions.create({
             model: 'gpt-4',
             messages: [
                 {
                     role: 'system',
-                    content: 'Eres un asistente legal especializado en leyes chilenas.'
+                    content: `Eres un asistente legal especializado en leyes chilenas, específicamente en:
+                    - Deudas bancarias
+                    - Créditos y repactaciones
+                    - Quiebra personal
+                    - Insolvencia
+                    - Ley 20.720 de Reorganización y Liquidación
+                    
+                    Da respuestas claras y prácticas enfocadas en estos temas.`
                 },
                 { role: 'user', content: message }
             ],
@@ -104,10 +103,18 @@ app.post('/api/chatWithAI', authenticateUser, async (req, res) => {
             max_tokens: 500
         });
 
-        res.json({ response: completion.choices[0].message.content });
+        // Log de respuesta exitosa
+        console.log('Respuesta generada exitosamente');
+
+        return res.json({ response: completion.choices[0].message.content });
     } catch (error) {
-        console.error('Error en chat:', error);
-        res.status(500).json({ error: error.message });
+        console.error('Error detallado en chatWithAI:', error);
+        
+        // Respuesta de error más específica
+        return res.status(500).json({ 
+            error: 'Error al procesar la consulta',
+            details: error.message
+        });
     }
 });
 
