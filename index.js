@@ -6,8 +6,7 @@ const cors = require('cors');
 const admin = require('firebase-admin');
 const path = require('path');
 const dotenv = require('dotenv');
-// Importación recomendada de OpenAI:
-const { Configuration, OpenAIApi } = require('openai');
+const OpenAI = require('openai');
 
 dotenv.config();
 
@@ -47,11 +46,10 @@ app.get('/env-config.js', (req, res) => {
   res.send(`window.ENV = ${JSON.stringify(envVars)};`);
 });
 
-// 5. Inicialización de OpenAI (forma recomendada)
-const configuration = new Configuration({
+// 5. Inicialización de OpenAI (versión corregida)
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-const openai = new OpenAIApi(configuration);
 
 // 6. Middleware de autenticación
 const authenticateUser = async (req, res, next) => {
@@ -137,8 +135,8 @@ puede requerir la evaluación de un abogado.`;
     // Agregar mensaje actual
     messages.push({ role: 'user', content: message });
 
-    // Generar respuesta con la API de OpenAI (forma recomendada)
-    const completion = await openai.createChatCompletion({
+    // Generar respuesta con la API de OpenAI (versión corregida)
+    const completion = await openai.chat.completions.create({
       model: 'gpt-4',
       messages: messages,
       temperature: 0.7,
@@ -147,13 +145,15 @@ puede requerir la evaluación de un abogado.`;
       frequency_penalty: 0.3,
     });
 
+    const responseContent = completion.choices[0].message.content;
+
     // Guardar en Firestore
     try {
       await db.collection('chats').add({
         userId: req.user.uid,
         category,
         message,
-        response: completion.data.choices[0].message.content,
+        response: responseContent,
         timestamp: admin.firestore.FieldValue.serverTimestamp(),
       });
 
@@ -173,7 +173,7 @@ puede requerir la evaluación de un abogado.`;
     console.log(`Respuesta generada en ${processingTime}ms`);
 
     return res.json({
-      response: completion.data.choices[0].message.content,
+      response: responseContent,
       processingTime,
     });
   } catch (error) {
