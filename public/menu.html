@@ -3,16 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Metaetiquetas de seguridad -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://www.gstatic.com; script-src 'self' 'unsafe-inline' https://www.gstatic.com; style-src 'self' 'unsafe-inline';">
-  <meta http-equiv="X-Content-Type-Options" content="nosniff">
-  <meta http-equiv="X-Frame-Options" content="DENY">
   <title>AbogadApp | Selecciona tu Consulta</title>
   
-  <!-- Firebase SDKs con integrity -->
-  <script src="/env-config.js" crossorigin="anonymous"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js" crossorigin="anonymous"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js" crossorigin="anonymous"></script>
+  <!-- Firebase SDKs -->
+  <script src="/env-config.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
 
   <style>
     :root {
@@ -389,130 +385,89 @@
         </label>
       </div>
     </div>
-
     <script>
-        // Función de sanitización
-        const sanitizeHTML = (str) => {
-            const div = document.createElement('div');
-            div.textContent = str;
-            return div.innerHTML;
-        };
-
         let auth;
         let initializing = true;
     
-        // Configuración segura de Firebase
-        const firebaseConfig = window.ENV?.FIREBASE_CONFIG || {
-            authDomain: window.ENV?.FIREBASE_AUTH_DOMAIN,
-            projectId: window.ENV?.FIREBASE_PROJECT_ID,
-            storageBucket: window.ENV?.FIREBASE_STORAGE_BUCKET,
-            messagingSenderId: window.ENV?.FIREBASE_MESSAGING_SENDER_ID,
-            appId: window.ENV?.FIREBASE_APP_ID
+        const firebaseConfig = {
+          apiKey: "AIzaSyD242Qba3E-UgeA1UPXp9PgmjJK_Xg6VKY",
+          authDomain: "deudazero-b8e33.firebaseapp.com",
+          projectId: "deudazero-b8e33",
+          storageBucket: "deudazero-b8e33.firebasestorage.app",
+          messagingSenderId: "763390302400",
+          appId: "1:763390302400:web:6d9f294001f9af5731b525"
         };
     
-        // Inicialización de Firebase
+        // Inicializar Firebase
         try {
-            if (!firebase.apps.length) {
-                firebase.initializeApp(firebaseConfig);
-            }
-            auth = firebase.auth();
-            console.log("Firebase inicializado correctamente");
+          if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+          }
+          auth = firebase.auth();
+          console.log("Firebase inicializado correctamente");
         } catch (error) {
-            console.error("Error al inicializar Firebase:", error);
+          console.error("Error al inicializar Firebase:", error);
         }
     
-        // Verificación de autenticación
-        auth.onAuthStateChanged(async (user) => {
-            if (!user) {
-                window.location.href = '/';
-                return;
-            }
-
-            try {
-                const token = await user.getIdToken(true);
-                if (!token) throw new Error('No se pudo obtener el token');
-
-                const userName = document.getElementById('userName');
-                if (userName) {
-                    userName.textContent = sanitizeHTML(user.displayName || user.email || 'Usuario');
-                }
-            } catch (error) {
-                console.error('Error de autenticación:', error);
-                await auth.signOut();
-                window.location.href = '/';
-            } finally {
-                toggleLoading(false);
-            }
+        // Verificar autenticación
+        auth.onAuthStateChanged((user) => {
+          if (!user) {
+            window.location.href = '/';
+            return;
+          }
+    
+          const userName = document.getElementById('userName');
+          if (userName) {
+            userName.textContent = user.displayName || user.email || 'Usuario';
+          }
+          toggleLoading(false);
         });
     
         function toggleLoading(show) {
-            const loader = document.getElementById('loading');
-            if (loader) {
-                loader.style.display = show ? 'flex' : 'none';
-            }
+          const loader = document.getElementById('loading');
+          if (loader) {
+            loader.style.display = show ? 'flex' : 'none';
+          }
         }
     
         function selectOption(category) {
-            if (!category || typeof category !== 'string') {
-                console.error('Categoría inválida');
-                return;
-            }
-
-            const allowedCategories = ['deudas', 'documentos'];
-            if (!allowedCategories.includes(category)) {
-                console.error('Categoría no permitida');
-                return;
-            }
-
-            console.log('Seleccionando categoría:', category);
+          console.log('Seleccionando categoría:', category);
+          
+          document.querySelectorAll('.option-item').forEach(item => {
+            item.classList.remove('selected');
+          });
+          
+          const selectedItem = document.querySelector(`[value="${category}"]`).closest('.option-item');
+          if (selectedItem) {
+            selectedItem.classList.add('selected');
             
-            document.querySelectorAll('.option-item').forEach(item => {
-                item.classList.remove('selected');
-            });
-            
-            const selectedItem = document.querySelector(`[value="${sanitizeHTML(category)}"]`)?.closest('.option-item');
-            if (selectedItem) {
-                selectedItem.classList.add('selected');
-                
-                try {
-                    sessionStorage.setItem('selectedCategory', category);
-                    window.location.href = '/chat';
-                } catch (error) {
-                    console.error('Error al redireccionar:', error);
-                    toggleLoading(false);
-                }
+            try {
+              sessionStorage.setItem('selectedCategory', category);
+              window.location.href = '/chat';
+            } catch (error) {
+              console.error('Error al redireccionar:', error);
+              toggleLoading(false);
             }
+          }
         }
     
         function optionInDevelopment() {
-            alert("Esta opción está en desarrollo. ¡Pronto estará disponible!");
+          alert("Esta opción está en desarrollo. ¡Pronto estará disponible!");
         }
     
         document.getElementById('logoutButton').addEventListener('click', async () => {
-            toggleLoading(true);
-            try {
-                await auth.signOut();
-                // Limpieza segura de datos de sesión
-                sessionStorage.clear();
-                localStorage.clear();
-                window.location.href = '/';
-            } catch (error) {
-                console.error("Error al cerrar sesión:", error);
-                toggleLoading(false);
-            }
+          toggleLoading(true);
+          try {
+            await auth.signOut();
+            window.location.href = '/';
+          } catch (error) {
+            console.error("Error al cerrar sesión:", error);
+            toggleLoading(false);
+          }
         });
     
         document.addEventListener('DOMContentLoaded', () => {
-            toggleLoading(true);
-            
-            // Timeout de seguridad
-            setTimeout(() => {
-                if (initializing) {
-                    console.error('Timeout en la inicialización');
-                    toggleLoading(false);
-                    alert('Error al cargar la aplicación. Por favor, recarga la página.');
-                }
-            }, 10000);
+          toggleLoading(true);
         });
       </script>
     </body>
