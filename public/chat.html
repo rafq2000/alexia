@@ -3,12 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Metaetiquetas de seguridad -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://www.gstatic.com; script-src 'self' 'unsafe-inline' https://www.gstatic.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://api.deudazero.com https://firestore.googleapis.com">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta http-equiv="Permissions-Policy" content="geolocation=(), microphone=(), camera=()">
   <title>AbogadApp | Asistente Legal</title>
   
   <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js" crossorigin="anonymous" integrity="sha384-[hash]"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js" crossorigin="anonymous" integrity="sha384-[hash]"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js" crossorigin="anonymous" integrity="sha384-[hash]"></script>
 
   <style>
     :root {
@@ -383,290 +388,344 @@
   </style>
 </head>
 <body>
-  <div class="main-container">
-    <header class="app-header">
-      <div class="brand" onclick="window.location.href='/menu'">
-        <!-- Logo AbogadApp -->
-        <img src="/assets/logo.png" alt="AbogadApp Logo" class="logo">
-        <span class="brand-name">AbogadApp</span>
-      </div>
-      <div class="user-info">
-        <span id="userName" class="user-name">Ricardo Farias</span>
-        <button id="logoutButton" class="logout-btn">Cerrar sesión</button>
-      </div>
-    </header>
-
-    <div class="chat-container">
-      <div id="chatMessages" class="chat-messages"></div>
-      <div class="chat-input">
-        <textarea 
-          id="messageInput" 
-          placeholder="Escribe tu mensaje aquí..."
-          rows="1"></textarea>
-        <button id="sendButton" class="send-btn">
-          <!-- Ícono de enviar -->
-          <img src="/assets/send-icon.png" alt="Enviar" class="send-icon">
-          Enviar
-        </button>
+    <div class="main-container">
+      <header class="app-header">
+        <div class="brand" onclick="window.location.href='/menu'">
+          <!-- Logo AbogadApp -->
+          <img src="/assets/logo.png" alt="AbogadApp Logo" class="logo" referrerpolicy="no-referrer">
+          <span class="brand-name">AbogadApp</span>
+        </div>
+        <div class="user-info">
+          <span id="userName" class="user-name">Cargando...</span>
+          <button id="logoutButton" class="logout-btn">Cerrar sesión</button>
+        </div>
+      </header>
+  
+      <div class="chat-container">
+        <div id="chatMessages" class="chat-messages"></div>
+        <div class="chat-input">
+          <textarea 
+            id="messageInput" 
+            placeholder="Escribe tu mensaje aquí..."
+            rows="1"
+            maxlength="2000"></textarea>
+          <button id="sendButton" class="send-btn">
+            <!-- Ícono de enviar -->
+            <img src="/assets/send-icon.png" alt="Enviar" class="send-icon" referrerpolicy="no-referrer">
+            Enviar
+          </button>
+        </div>
       </div>
     </div>
-  </div>
-
-  <!-- Botón de WhatsApp -->
-  <div class="whatsapp-button" onclick="redirectToWhatsApp()">
-    <img src="/assets/whatsapp-icon.png" alt="WhatsApp" class="whatsapp-icon">
-  </div>
-
-  <script>
-    let auth;
-    let selectedCategory;
-    let isProcessing = false;
-    let conversationHistory = [];
-    let retryAttempts = 0;
-    const MAX_RETRIES = 3;
-    const RETRY_DELAY = 1000;
-
-    // Config Firebase
-    const firebaseConfig = {
-      apiKey: "AIzaSyD242Qba3E-UgeA1UPXp9PgmjJK_Xg6VKY",
-      authDomain: "deudazero-b8e33.firebaseapp.com",
-      projectId: "deudazero-b8e33",
-      storageBucket: "deudazero-b8e33.firebasestorage.app",
-      messagingSenderId: "763390302400",
-      appId: "1:763390302400:web:6d9f294001f9af5731b525"
-    };
-
-    try {
-      if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-      }
-      auth = firebase.auth();
-    } catch (err) {
-      console.error("Error al inicializar Firebase:", err);
-      showConnectionStatus('Error de inicialización', 'error');
-    }
-
-    // Verif. Auth
-    auth.onAuthStateChanged(async user => {
-      if (!user) {
-        window.location.href = '/';
-        return;
-      }
-      document.getElementById('userName').textContent = user.displayName || user.email || 'Usuario';
-      
-      selectedCategory = sessionStorage.getItem('selectedCategory');
-      if (!selectedCategory) {
-        window.location.href = '/menu';
-        return;
-      }
-
-      await checkAPIConnection();
-      initializeChat();
-    });
-
-    async function checkAPIConnection() {
+  
+    <!-- Botón de WhatsApp -->
+    <div class="whatsapp-button" onclick="redirectToWhatsApp()">
+      <img src="/assets/whatsapp-icon.png" alt="WhatsApp" class="whatsapp-icon" referrerpolicy="no-referrer">
+    </div>
+  
+    <script>
+      // Función de sanitización
+      const sanitizeInput = (str) => {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+      };
+  
+      let auth;
+      let selectedCategory;
+      let isProcessing = false;
+      let conversationHistory = [];
+      let retryAttempts = 0;
+      const MAX_RETRIES = 3;
+      const RETRY_DELAY = 1000;
+      const MAX_MESSAGE_LENGTH = 2000;
+  
+      // Config Firebase desde variables de entorno
+      const firebaseConfig = window.ENV?.FIREBASE_CONFIG || {
+        authDomain: window.ENV?.FIREBASE_AUTH_DOMAIN,
+        projectId: window.ENV?.FIREBASE_PROJECT_ID,
+        storageBucket: window.ENV?.FIREBASE_STORAGE_BUCKET,
+        messagingSenderId: window.ENV?.FIREBASE_MESSAGING_SENDER_ID,
+        appId: window.ENV?.FIREBASE_APP_ID
+      };
+  
       try {
-        const token = await auth.currentUser.getIdToken();
-        const resp = await fetchWithTimeout('/api/health', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (!resp.ok) throw new Error('API no disponible');
-        showConnectionStatus('Conectado', 'success');
-      } catch (e) {
-        showConnectionStatus('Error de conexión', 'error');
-        throw e;
-      }
-    }
-
-    function initializeChat() {
-      const welcome = `Hola, veo que tienes consultas sobre problemas con deudas o bancos. 
-Por favor, responde estas preguntas para ayudarte mejor:
-
-¿Qué tipo de deuda tienes? (por ejemplo: bancaria, tarjeta de crédito, préstamo personal u otra)`;
-      addMessage(welcome, 'assistant');
-      conversationHistory.push({ role: 'assistant', content: welcome });
-    }
-
-    async function fetchWithTimeout(url, options, timeout=8000) {
-      const ctrl = new AbortController();
-      const tId = setTimeout(() => ctrl.abort(), timeout);
-      try {
-        const r = await fetch(url, { ...options, signal: ctrl.signal });
-        clearTimeout(tId);
-        return r;
-      } catch (e) {
-        clearTimeout(tId);
-        throw e;
-      }
-    }
-
-    async function sendMessage(retry=false) {
-      if (isProcessing && !retry) return;
-
-      const inp = document.getElementById('messageInput');
-      const msg = inp.value.trim();
-      if (!msg && !retry) return;
-
-      isProcessing = true;
-      const btn = document.getElementById('sendButton');
-      btn.disabled = true;
-
-      if (!retry) {
-        inp.value = '';
-        inp.style.height = '54px';
-        addMessage(msg, 'user');
-        conversationHistory.push({ role: 'user', content: msg });
-      }
-
-      const typing = showTypingIndicator();
-
-      try {
-        await checkAPIConnection();
-        const token = await auth.currentUser.getIdToken();
-        const resp = await fetchWithTimeout('/api/chatWithAI', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            message: msg,
-            category: selectedCategory,
-            conversationHistory
-          })
-        });
-        if (!resp.ok) throw new Error('Error en la respuesta del servidor');
-        const data = await resp.json();
-        typing.remove();
-
-        if (data.response) {
-          addMessage(data.response, 'assistant');
-          conversationHistory.push({ role: 'assistant', content: data.response });
-          await saveMessageToFirestore(msg, 'user');
-          await saveMessageToFirestore(data.response, 'assistant');
-          retryAttempts = 0;
-        } else {
-          throw new Error('Respuesta vacía del servidor');
+        if (!firebase.apps.length) {
+          firebase.initializeApp(firebaseConfig);
         }
-      } catch (e) {
-        console.error(e);
-        typing?.remove();
-        if (retryAttempts < MAX_RETRIES) {
-          retryAttempts++;
-          await new Promise(r => setTimeout(r, RETRY_DELAY*retryAttempts));
-          sendMessage(true);
+        auth = firebase.auth();
+      } catch (err) {
+        console.error("Error al inicializar Firebase:", err);
+        showConnectionStatus('Error de inicialización', 'error');
+      }
+  
+      // Verificación de autenticación mejorada
+      auth.onAuthStateChanged(async user => {
+        if (!user) {
+          window.location.href = '/';
           return;
         }
-        showConnectionStatus('Error al enviar mensaje', 'error');
-        addMessage('Lo siento, ha ocurrido un error. Por favor, intenta nuevamente.', 'assistant');
-        retryAttempts = 0;
-      } finally {
-        isProcessing = false;
-        inp.disabled = false;
-        btn.disabled = false;
-        if (!retry) inp.focus();
+  
+        try {
+          const token = await user.getIdToken(true);
+          if (!token) throw new Error('Token inválido');
+  
+          document.getElementById('userName').textContent = sanitizeInput(user.displayName || user.email || 'Usuario');
+          
+          selectedCategory = sessionStorage.getItem('selectedCategory');
+          if (!selectedCategory) {
+            window.location.href = '/menu';
+            return;
+          }
+  
+          await checkAPIConnection();
+          initializeChat();
+        } catch (error) {
+          console.error('Error de autenticación:', error);
+          await auth.signOut();
+          window.location.href = '/';
+        }
+      });
+  
+      async function checkAPIConnection() {
+        try {
+          const token = await auth.currentUser.getIdToken(true);
+          if (!token) throw new Error('Token inválido');
+  
+          const resp = await fetchWithTimeout('/api/health', {
+            headers: { 
+              'Authorization': `Bearer ${token}`,
+              'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin'
+          });
+          if (!resp.ok) throw new Error('API no disponible');
+          showConnectionStatus('Conectado', 'success');
+        } catch (e) {
+          showConnectionStatus('Error de conexión', 'error');
+          throw e;
+        }
       }
-    }
-
-    function showTypingIndicator() {
-      const msgs = document.getElementById('chatMessages');
-      const typingDiv = document.createElement('div');
-      typingDiv.className = 'typing-indicator';
-      typingDiv.innerHTML = `
-        <div class="typing-dots">
-          <div class="typing-dot"></div>
-          <div class="typing-dot"></div>
-          <div class="typing-dot"></div>
-        </div>
-      `;
-      msgs.appendChild(typingDiv);
-      msgs.scrollTop = msgs.scrollHeight;
-      return typingDiv;
-    }
-
-    async function saveMessageToFirestore(msg, sender) {
-      try {
-        const user = auth.currentUser;
-        if (!user) return;
-        const db = firebase.firestore();
-        await db.collection('chats').add({
-          userId: user.uid,
-          message: msg,
-          sender: sender,
-          category: selectedCategory,
-          timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
-      } catch (err) {
-        console.error('Error al guardar mensaje:', err);
+  
+      function initializeChat() {
+        const welcome = `Hola, veo que tienes consultas sobre problemas con deudas o bancos. 
+  Por favor, responde estas preguntas para ayudarte mejor:
+  
+  ¿Qué tipo de deuda tienes? (por ejemplo: bancaria, tarjeta de crédito, préstamo personal u otra)`;
+        addMessage(welcome, 'assistant');
+        conversationHistory.push({ role: 'assistant', content: welcome });
       }
-    }
-
-    function addMessage(txt, sender) {
-      const msgs = document.getElementById('chatMessages');
-      const div = document.createElement('div');
-      div.className = `message ${sender}-message`;
-      div.innerHTML = `<div class="message-content">${txt}</div>`;
-      msgs.appendChild(div);
-      msgs.scrollTop = msgs.scrollHeight;
-    }
-
-    function showConnectionStatus(msg, type) {
-      const exists = document.querySelector('.connection-status');
-      if (exists) exists.remove();
-      const div = document.createElement('div');
-      div.className = `connection-status ${type}`;
-      div.textContent = msg;
-      document.body.appendChild(div);
-
-      setTimeout(() => {
-        div.style.animation = 'statusDisappear 0.3s forwards';
-        setTimeout(() => div.remove(), 300);
-      }, 3000);
-    }
-
-    document.getElementById('messageInput').addEventListener('input', function() {
-      this.style.height = '54px';
-      this.style.height = Math.min(this.scrollHeight, 150) + 'px';
-    });
-
-    document.getElementById('messageInput').addEventListener('keydown', function(e) {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage();
+  
+      async function fetchWithTimeout(url, options, timeout=8000) {
+        const ctrl = new AbortController();
+        const tId = setTimeout(() => ctrl.abort(), timeout);
+        try {
+          const r = await fetch(url, { 
+            ...options, 
+            signal: ctrl.signal,
+            credentials: 'same-origin',
+            headers: {
+              ...options.headers,
+              'X-Requested-With': 'XMLHttpRequest'
+            }
+          });
+          clearTimeout(tId);
+          return r;
+        } catch (e) {
+          clearTimeout(tId);
+          throw e;
+        }
       }
-    });
-
-    document.getElementById('sendButton').addEventListener('click', () => sendMessage());
-
-    document.getElementById('logoutButton').addEventListener('click', async () => {
-      try {
-        await auth.signOut();
-        window.location.href = '/';
-      } catch (err) {
-        console.error("Error al cerrar sesión:", err);
-        showConnectionStatus('Error al cerrar sesión', 'error');
+  
+      async function sendMessage(retry=false) {
+        if (isProcessing && !retry) return;
+  
+        const inp = document.getElementById('messageInput');
+        const msg = inp.value.trim();
+        
+        if (!msg || msg.length > MAX_MESSAGE_LENGTH) {
+          showConnectionStatus('Mensaje inválido', 'error');
+          return;
+        }
+  
+        if (!retry) {
+          inp.value = '';
+          inp.style.height = '54px';
+          addMessage(sanitizeInput(msg), 'user');
+          conversationHistory.push({ role: 'user', content: msg });
+        }
+  
+        isProcessing = true;
+        const btn = document.getElementById('sendButton');
+        btn.disabled = true;
+  
+        const typing = showTypingIndicator();
+  
+        try {
+          await checkAPIConnection();
+          const token = await auth.currentUser.getIdToken(true);
+          if (!token) throw new Error('Token inválido');
+  
+          const resp = await fetchWithTimeout('/api/chatWithAI', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              message: msg,
+              category: selectedCategory,
+              conversationHistory: conversationHistory.slice(-5)
+            })
+          });
+  
+          if (!resp.ok) throw new Error('Error en la respuesta del servidor');
+          const data = await resp.json();
+          typing?.remove();
+  
+          if (data.response) {
+            addMessage(sanitizeInput(data.response), 'assistant');
+            conversationHistory.push({ role: 'assistant', content: data.response });
+            await saveMessageToFirestore(msg, 'user');
+            await saveMessageToFirestore(data.response, 'assistant');
+            retryAttempts = 0;
+          } else {
+            throw new Error('Respuesta vacía del servidor');
+          }
+        } catch (e) {
+          console.error(e);
+          typing?.remove();
+          if (retryAttempts < MAX_RETRIES) {
+            retryAttempts++;
+            await new Promise(r => setTimeout(r, RETRY_DELAY*retryAttempts));
+            sendMessage(true);
+            return;
+          }
+          showConnectionStatus('Error al enviar mensaje', 'error');
+          addMessage('Lo siento, ha ocurrido un error. Por favor, intenta nuevamente.', 'assistant');
+          retryAttempts = 0;
+        } finally {
+          isProcessing = false;
+          inp.disabled = false;
+          btn.disabled = false;
+          if (!retry) inp.focus();
+        }
       }
-    });
-
-    function redirectToWhatsApp() {
-      const phoneNumber = '+56999999999';
-      const text = encodeURIComponent('Hola, necesito ayuda legal profesional sobre problemas con deudas o bancos. ¿Podría asesorarme?');
-      window.open(`https://wa.me/${phoneNumber}?text=${text}`, '_blank');
-    }
-
-    window.addEventListener('online', () => {
-      showConnectionStatus('Conexión restaurada', 'success');
-    });
-    window.addEventListener('offline', () => {
-      showConnectionStatus('Sin conexión', 'error');
-    });
-
-    window.addEventListener('beforeunload', (e) => {
-      if (isProcessing || document.getElementById('messageInput').value.trim()) {
-        e.preventDefault();
-        e.returnValue = '';
+  
+      function showTypingIndicator() {
+        const msgs = document.getElementById('chatMessages');
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'typing-indicator';
+        typingDiv.innerHTML = `
+          <div class="typing-dots">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+          </div>
+        `;
+        msgs.appendChild(typingDiv);
+        msgs.scrollTop = msgs.scrollHeight;
+        return typingDiv;
       }
-    });
-  </script>
-</body>
-</html>
+  
+      async function saveMessageToFirestore(msg, sender) {
+        try {
+          const user = auth.currentUser;
+          if (!user) return;
+  
+          const token = await user.getIdToken(true);
+          if (!token) throw new Error('Token inválido');
+  
+          const db = firebase.firestore();
+          await db.collection('chats').add({
+            userId: user.uid,
+            message: sanitizeInput(msg),
+            sender: sender,
+            category: selectedCategory,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        } catch (err) {
+          console.error('Error al guardar mensaje:', err);
+        }
+      }
+  
+      function addMessage(txt, sender) {
+        const msgs = document.getElementById('chatMessages');
+        const div = document.createElement('div');
+        div.className = `message ${sender}-message`;
+        div.innerHTML = `<div class="message-content">${txt}</div>`;
+        msgs.appendChild(div);
+        msgs.scrollTop = msgs.scrollHeight;
+      }
+  
+      function showConnectionStatus(msg, type) {
+        const exists = document.querySelector('.connection-status');
+        if (exists) exists.remove();
+        
+        const div = document.createElement('div');
+        div.className = `connection-status ${type}`;
+        div.textContent = sanitizeInput(msg);
+        document.body.appendChild(div);
+  
+        setTimeout(() => {
+          div.style.animation = 'statusDisappear 0.3s forwards';
+          setTimeout(() => div.remove(), 300);
+        }, 3000);
+      }
+  
+      document.getElementById('messageInput').addEventListener('input', function() {
+        this.style.height = '54px';
+        this.style.height = Math.min(this.scrollHeight, 150) + 'px';
+        
+        // Validación de longitud
+        if (this.value.length > MAX_MESSAGE_LENGTH) {
+          this.value = this.value.substring(0, MAX_MESSAGE_LENGTH);
+        }
+      });
+  
+      document.getElementById('messageInput').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendMessage();
+        }
+      });
+  
+      document.getElementById('sendButton').addEventListener('click', () => sendMessage());
+  
+      document.getElementById('logoutButton').addEventListener('click', async () => {
+        try {
+          await auth.signOut();
+          sessionStorage.clear();
+          localStorage.clear();
+          window.location.href = '/';
+        } catch (err) {
+          console.error("Error al cerrar sesión:", err);
+          showConnectionStatus('Error al cerrar sesión', 'error');
+        }
+      });
+  
+      function redirectToWhatsApp() {
+        const phoneNumber = '+56999999999';
+        const text = encodeURIComponent('Hola, necesito ayuda legal profesional sobre problemas con deudas o bancos. ¿Podría asesorarme?');
+        const safeUrl = `https://wa.me/${phoneNumber}?text=${text}`;
+        if (safeUrl.startsWith('https://wa.me/')) {
+          window.open(safeUrl, '_blank', 'noopener,noreferrer');
+        }
+      }
+  
+      window.addEventListener('online', () => {
+        showConnectionStatus('Conexión restaurada', 'success');
+      });
+      window.addEventListener('offline', () => {
+        showConnectionStatus('Sin conexión', 'error');
+      });
+  
+      window.addEventListener('beforeunload', (e) => {
+        if (isProcessing || document.getElementById('messageInput').value.trim()) {
+          e.preventDefault();
+          e.returnValue = '';
+        }
+      });
+    </script>
+  </body>
+  </html>

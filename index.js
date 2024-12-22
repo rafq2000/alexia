@@ -11,10 +11,26 @@ const multer = require('multer');
 const Tesseract = require('tesseract.js');
 const PDFParser = require('pdf-parse');
 const sharp = require('sharp');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const xss = require('xss-clean');
+const hpp = require('hpp');
 
 dotenv.config();
 
 const app = express();
+
+// Configuración de seguridad básica
+app.use(helmet());
+app.use(xss());
+app.use(hpp());
+
+// Limitar solicitudes por IP
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 100 // límite de 100 solicitudes por ventana
+});
+app.use('/api/', limiter);
 
 // 1. Inicialización de Firebase Admin
 try {
@@ -33,14 +49,32 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
     fileSize: 20 * 1024 * 1024 // 20MB
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf', 'text/plain'];
+    if (!allowedTypes.includes(file.mimetype)) {
+      cb(new Error('Tipo de archivo no permitido'), false);
+      return;
+    }
+    cb(null, true);
   }
 });
 
 // 3. Middlewares
-app.use(cors());
+app.use(cors({
+  origin: process.env.ALLOWED_ORIGINS?.split(',') || '*',
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), {
+  maxAge: '1d',
+  setHeaders: (res, path) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+  }
+}));
 
 // 4. Inicialización de OpenAI
 const openai = new OpenAI({
@@ -82,7 +116,7 @@ async function extractTextFromFile(file) {
   }
 }
 
-// 6. Middleware de autenticación
+// 6. Middleware de autenticación mejorado
 const authenticateUser = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
@@ -93,9 +127,19 @@ const authenticateUser = async (req, res, next) => {
       });
     }
 
-    const token = authHeader.split('Bearer ')[1];
+    const token = authHeader.split('Bearer ')[1].trim();
+    if (!token) {
+      return res.status(401).json({
+        error: 'Token vacío',
+        details: 'El token de autenticación no puede estar vacío'
+      });
+    }
+
     try {
       const decodedToken = await admin.auth().verifyIdToken(token);
+      if (Date.now() >= decodedToken.exp * 1000) {
+        throw new Error('Token expirado');
+      }
       req.user = decodedToken;
       next();
     } catch (tokenError) {
@@ -116,18 +160,21 @@ const authenticateUser = async (req, res, next) => {
 
 // 7. Rutas
 
-// Configuración de env para el cliente
+// Configuración de env para el cliente (modificada para seguridad)
 app.get('/env-config.js', (req, res) => {
-  res.set('Content-Type', 'application/javascript');
-  const envVars = {
-    FIREBASE_API_KEY: process.env.FIREBASE_API_KEY || '',
+  res.set({
+    'Content-Type': 'application/javascript',
+    'Cache-Control': 'no-store',
+    'Pragma': 'no-cache'
+  });
+  const safeEnvVars = {
     FIREBASE_AUTH_DOMAIN: process.env.FIREBASE_AUTH_DOMAIN || '',
     FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID || '',
     FIREBASE_STORAGE_BUCKET: process.env.FIREBASE_STORAGE_BUCKET || '',
     FIREBASE_MESSAGING_SENDER_ID: process.env.FIREBASE_MESSAGING_SENDER_ID || '',
     FIREBASE_APP_ID: process.env.FIREBASE_APP_ID || ''
   };
-  res.send(`window.ENV = ${JSON.stringify(envVars)};`);
+  res.send(`window.ENV = ${JSON.stringify(safeEnvVars)};`);
 });
 
 // Ruta de salud
@@ -289,16 +336,27 @@ app.get('/document-chat', (req, res) => {
   res.sendFile(path.join(__dirname, 'public/document-chat.html'));
 });
 
-// Manejo de errores global
+// Manejo de errores global mejorado
 app.use((err, req, res, next) => {
   console.error('Error no manejado:', err);
-  res.status(500).json({
+  
+  // Evitar exponer detalles del error en producción
+  const errorResponse = {
     error: 'Error interno del servidor',
     details: process.env.NODE_ENV === 'development' ? err.message : 'Error interno del servidor'
-  });
+  };
+
+  // Manejo específico para errores de multer
+  if (err instanceof multer.MulterError) {
+    errorResponse.error = 'Error al procesar archivo';
+    errorResponse.details = 'El archivo excede el tamaño máximo permitido';
+    return res.status(400).json(errorResponse);
+  }
+
+  res.status(500).json(errorResponse);
 });
 
-// Iniciar servidor
+// Iniciar servidor de forma segura
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en puerto ${PORT}`);

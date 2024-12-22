@@ -5,26 +5,39 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "security-check": "npm audit && snyk test",
+    "lint": "eslint .",
+    "test": "jest"
   },
   "dependencies": {
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.1",
-    "express": "^4.18.2",
-    "firebase-admin": "^11.11.1",
-    "openai": "^4.7.0",
-    "multer": "^1.4.5-lts.1",
-    "tesseract.js": "^4.1.1",
-    "pdf-parse": "^1.1.1",
-    "sharp": "^0.32.6"
+    "cors": "2.8.5",
+    "dotenv": "16.4.1",
+    "express": "4.18.2",
+    "firebase-admin": "11.11.1",
+    "openai": "4.7.0",
+    "multer": "1.4.5-lts.1",
+    "tesseract.js": "4.1.1",
+    "pdf-parse": "1.1.1",
+    "sharp": "0.32.6",
+    "helmet": "7.1.0",
+    "express-rate-limit": "7.1.5",
+    "express-validator": "7.0.1",
+    "hpp": "0.2.3",
+    "csurf": "1.11.0",
+    "xss-clean": "0.1.4"
   },
   "devDependencies": {
-    "nodemon": "^3.0.3"
+    "nodemon": "3.0.3",
+    "eslint": "8.56.0",
+    "jest": "29.7.0",
+    "snyk": "1.1274.0"
   },
   "engines": {
     "node": ">=18.0.0"
   },
   "author": "AbogadApp",
   "license": "ISC",
-  "keywords": ["legal", "ai", "documents", "analysis"]
+  "keywords": ["legal", "ai", "documents", "analysis"],
+  "private": true
 }
