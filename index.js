@@ -1,24 +1,73 @@
 /*******************************************
- *         index.js COMPLETO (Node)        *
+ *        index.js con ajustes de seguridad
  *******************************************/
 const express = require('express');
 const cors = require('cors');
-const admin = require('firebase-admin');
 const path = require('path');
 const dotenv = require('dotenv');
+const helmet = require('helmet');
+const hpp = require('hpp');
+const xssClean = require('xss-clean');
+const rateLimit = require('express-rate-limit');
+const csurf = require('csurf');
+const { body, validationResult } = require('express-validator'); // ejemplo de uso con express-validator
+
+// Paquetes de Firebase y OpenAI
+const admin = require('firebase-admin');
 const OpenAI = require('openai');
+
+// Subida y manipulación de archivos
 const multer = require('multer');
 const Tesseract = require('tesseract.js');
 const PDFParser = require('pdf-parse');
 const sharp = require('sharp');
 
+// Cargar variables de entorno
 dotenv.config();
 
+// ----------------------------------------
+//  1. Inicializar Express
+// ----------------------------------------
 const app = express();
 
-// 1. Inicialización de Firebase Admin
+// ----------------------------------------
+//  2. Configuración de seguridad
+// ----------------------------------------
+
+// Helmet para cabeceras seguras
+app.use(helmet());
+
+// Evitar inyección de parámetros repetidos
+app.use(hpp());
+
+// Limpiar inputs de posibles ataques XSS
+app.use(xssClean());
+
+// CORS básico (ajusta según tu dominio)
+app.use(cors());
+
+// Límite de peticiones (ejemplo: 100/minuto)
+const limiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minuto
+  max: 100, 
+  message: {
+    error: 'Demasiadas peticiones, por favor intenta de nuevo más tarde.',
+  },
+});
+app.use(limiter);
+
+// CSRF (requiere que tu front envíe token, o usar cookies y plantillas):
+// const csrfProtection = csurf({ cookie: true });
+// app.use(csrfProtection); 
+// Nota: Para APIs con JWT, a veces no se usa CSRF. Ajusta a tus necesidades.
+
+// ----------------------------------------
+//  3. Inicialización de Firebase Admin
+// ----------------------------------------
 try {
+  // Lee la cuenta de servicio desde la variable de entorno
   const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
   });
@@ -28,34 +77,39 @@ try {
   process.exit(1);
 }
 
-// 2. Configuración de multer para archivos (20MB máximo)
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: {
-    fileSize: 20 * 1024 * 1024 // 20MB
-  }
-});
-
-// 3. Middlewares
-app.use(cors());
+// ----------------------------------------
+//  4. Configuración de Express
+// ----------------------------------------
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+// Archivos estáticos (HTML, CSS, JS del cliente)
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 4. Inicialización de OpenAI
+// ----------------------------------------
+//  5. Configuración de multer (20MB máx.)
+// ----------------------------------------
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB
+});
+
+// ----------------------------------------
+//  6. Inicialización de OpenAI
+// ----------------------------------------
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
-// ======================
-// FUNCIÓN ACTUALIZADA #5
-// ======================
+// ----------------------------------------
+//  7. Función para extraer texto de archivos
+// ----------------------------------------
 async function extractTextFromFile(file) {
   try {
     console.log('Procesando archivo:', file.originalname, file.mimetype);
 
     if (file.mimetype.startsWith('image/')) {
-      console.log('Procesando imagen con OCR');
+      // Procesar imagen con Tesseract
       const optimizedBuffer = await sharp(file.buffer)
         .resize(2000, 2000, { fit: 'inside' })
         .normalize()
@@ -68,21 +122,24 @@ async function extractTextFromFile(file) {
       return result.data.text;
 
     } else if (file.mimetype === 'application/pdf') {
-      console.log('Procesando PDF');
+      // Procesar PDF con pdf-parse
       const pdfData = await PDFParser(file.buffer);
       return pdfData.text;
 
     } else {
-      console.log('Procesando como texto plano');
+      // Procesar como texto plano
       return file.buffer.toString('utf-8');
     }
+
   } catch (error) {
     console.error('Error procesando archivo:', error);
     throw new Error(`Error procesando ${file.originalname}: ${error.message}`);
   }
 }
 
-// 6. Middleware de autenticación
+// ----------------------------------------
+//  8. Middleware de autenticación (JWT Firebase)
+// ----------------------------------------
 const authenticateUser = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
@@ -96,7 +153,7 @@ const authenticateUser = async (req, res, next) => {
     const token = authHeader.split('Bearer ')[1];
     try {
       const decodedToken = await admin.auth().verifyIdToken(token);
-      req.user = decodedToken;
+      req.user = decodedToken; // Guardamos info del usuario en req
       next();
     } catch (tokenError) {
       console.error('Error al verificar token:', tokenError);
@@ -114,9 +171,11 @@ const authenticateUser = async (req, res, next) => {
   }
 };
 
-// 7. Rutas
+// ----------------------------------------
+//  9. Rutas principales
+// ----------------------------------------
 
-// Configuración de env para el cliente
+// 9.1 Env-config (para exponer ciertas vars al frontend)
 app.get('/env-config.js', (req, res) => {
   res.set('Content-Type', 'application/javascript');
   const envVars = {
@@ -130,12 +189,25 @@ app.get('/env-config.js', (req, res) => {
   res.send(`window.ENV = ${JSON.stringify(envVars)};`);
 });
 
-// Ruta de salud
+// 9.2 Ruta de salud
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Ruta para chat general
+// 9.3 (Opcional) Ejemplo con express-validator 
+//     - Revisa que exista 'message' y que su longitud sea > 5
+app.post('/api/checkMessage',
+  body('message').isLength({ min: 5 }).withMessage('El mensaje debe tener al menos 5 caracteres'),
+  (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    return res.json({ success: true, data: req.body.message });
+  }
+);
+
+// 9.4 Ruta para chat general con OpenAI
 app.post('/api/chatWithAI', authenticateUser, async (req, res) => {
   const startTime = Date.now();
   try {
@@ -151,6 +223,7 @@ app.post('/api/chatWithAI', authenticateUser, async (req, res) => {
     let systemContent = `Eres un asistente legal especializado en temas de deudas y documentos legales.`;
     let messages = [{ role: 'system', content: systemContent }];
 
+    // Limitar el historial a las últimas 5 entradas
     if (conversationHistory.length > 0) {
       messages = [...messages, ...conversationHistory.slice(-5)];
     }
@@ -177,6 +250,7 @@ app.post('/api/chatWithAI', authenticateUser, async (req, res) => {
         timestamp: admin.firestore.FieldValue.serverTimestamp()
       });
 
+      // Actualizar stats (ejemplo)
       await admin.firestore().collection('stats').doc('global').set({
         totalConsultas: admin.firestore.FieldValue.increment(1),
         ultimaActualizacion: admin.firestore.FieldValue.serverTimestamp()
@@ -198,9 +272,7 @@ app.post('/api/chatWithAI', authenticateUser, async (req, res) => {
   }
 });
 
-// ==========================
-// RUTA ACTUALIZADA Documentos
-// ==========================
+// 9.5 Ruta para analizar documentos
 app.post('/api/analyzeDocument', authenticateUser, upload.array('document'), async (req, res) => {
   try {
     console.log('Iniciando análisis de documentos');
@@ -239,14 +311,14 @@ app.post('/api/analyzeDocument', authenticateUser, upload.array('document'), asy
         {
           role: 'system',
           content: `Eres un asistente legal especializado en explicar documentos en términos simples.
-                   Analiza el texto proporcionado y:
-                   1. Identifica el tipo de documento
-                   2. Explica su contenido en términos simples
-                   3. Destaca puntos importantes
-                   4. Menciona fechas o plazos relevantes
-                   
-                   Termina SIEMPRE con:
-                   "Para recibir asesoría legal personalizada sobre este documento, haz clic en el ícono de WhatsApp para contactar a un abogado especialista."`
+                    Analiza el texto proporcionado y:
+                     1. Identifica el tipo de documento
+                     2. Explica su contenido en términos simples
+                     3. Destaca puntos importantes
+                     4. Menciona fechas o plazos relevantes
+                     
+                     Termina SIEMPRE con:
+                     "Para recibir asesoría legal personalizada sobre este documento, haz clic en el ícono de WhatsApp para contactar a un abogado especialista."`
         },
         {
           role: 'user',
@@ -272,7 +344,7 @@ app.post('/api/analyzeDocument', authenticateUser, upload.array('document'), asy
   }
 });
 
-// Rutas principales
+// 9.6 Rutas de frontend
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public/index.html'));
 });
@@ -289,7 +361,9 @@ app.get('/document-chat', (req, res) => {
   res.sendFile(path.join(__dirname, 'public/document-chat.html'));
 });
 
+// ----------------------------------------
 // Manejo de errores global
+// ----------------------------------------
 app.use((err, req, res, next) => {
   console.error('Error no manejado:', err);
   res.status(500).json({
@@ -298,7 +372,9 @@ app.use((err, req, res, next) => {
   });
 });
 
+// ----------------------------------------
 // Iniciar servidor
+// ----------------------------------------
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en puerto ${PORT}`);
