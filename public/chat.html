@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -126,7 +127,6 @@
       overflow: hidden;
       border: 1px solid rgba(0,0,0,0.05);
       position: relative;
-      min-height: calc(100vh - 140px);
     }
 
     .chat-messages {
@@ -171,6 +171,7 @@
     .message-content:hover {
       transform: translateY(-1px);
       box-shadow: var(--hover-shadow);
+      background: linear-gradient(120deg, rgba(255,255,255,0.8), rgba(255,255,255,0.9));
     }
 
     .user-message .message-content {
@@ -192,8 +193,6 @@
       display: flex;
       gap: 15px;
       align-items: flex-end;
-      position: sticky;
-      bottom: 0;
     }
 
     .chat-input textarea {
@@ -229,7 +228,6 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      white-space: nowrap;
     }
 
     .send-btn:hover:not(:disabled) {
@@ -262,7 +260,7 @@
     }
 
     .typing-dots {
-      display: flex;
+      display: flex; 
       gap: 5px;
     }
 
@@ -295,22 +293,17 @@
       z-index: 1000;
     }
 
-    @keyframes statusAppear {
-      from { transform: translateY(-100%); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
-
-    @keyframes statusDisappear {
-      from { transform: translateY(0); opacity: 1; }
-      to { transform: translateY(-100%); opacity: 0; }
-    }
-
     .connection-status.success {
       background: var(--success);
     }
 
     .connection-status.error {
       background: var(--error);
+    }
+
+    @keyframes statusAppear {
+      from { transform: translateY(-100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
     }
 
     .whatsapp-button {
@@ -437,9 +430,9 @@
           id="messageInput" 
           placeholder="Escribe tu mensaje aquí..."
           rows="1"></textarea>
-        <button id="sendButton" class="send-btn" disabled>
+        <button id="sendButton" class="send-btn">
           <img src="/assets/send-icon.png" alt="Enviar" class="send-icon">
-          <span>Enviar</span>
+          Enviar
         </button>
       </div>
     </div>
@@ -510,232 +503,4 @@
           if (!resp.ok) throw new Error('API no disponible');
 
           showConnectionStatus('Conectado', 'success');
-          return true;
-        } catch (err) {
-          attempts++;
-          if (attempts === maxAttempts) {
-            showConnectionStatus('Error de conexión', 'error');
-            return false;
-          }
-          await new Promise(r => setTimeout(r, 1000 * attempts));
-        }
-      }
-    }
-
-    function initializeChat() {
-      const welcome = `Hola, veo que tienes consultas sobre problemas con deudas o bancos. 
-Por favor, responde estas preguntas para ayudarte mejor:
-
-¿Qué tipo de deuda tienes? (por ejemplo: bancaria, tarjeta de crédito, préstamo personal u otra)`;
-      addMessage(welcome, 'assistant');
-      conversationHistory.push({ role: 'assistant', content: welcome });
-    }
-
-    async function fetchWithTimeout(url, options, timeout = 8000) {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), timeout);
-      
-      try {
-        const response = await fetch(url, {
-          ...options,
-          signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-        return response;
-      } catch (error) {
-        clearTimeout(timeoutId);
-        throw error;
-      }
-    }
-
-    async function sendMessage(retry = false) {
-      if (isProcessing && !retry) return;
-
-      const messageInput = document.getElementById('messageInput');
-      const message = messageInput.value.trim();
-      if (!message && !retry) return;
-
-      isProcessing = true;
-      const sendButton = document.getElementById('sendButton');
-      sendButton.disabled = true;
-
-      if (!retry) {
-        messageInput.value = '';
-        messageInput.style.height = '54px';
-        addMessage(message, 'user');
-        conversationHistory.push({ role: 'user', content: message });
-      }
-
-      const typingIndicator = showTypingIndicator();
-      let retryCount = 0;
-      const maxRetries = 3;
-
-      async function attemptSend() {
-        try {
-          const token = await auth.currentUser.getIdToken();
-          const response = await fetchWithTimeout('/api/chatWithAI', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({
-              message: message,
-              category: selectedCategory,
-              conversationHistory: conversationHistory.slice(-5)
-            })
-          });
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.details || 'Error en la respuesta del servidor');
-          }
-
-          const data = await response.json();
-          typingIndicator?.remove();
-
-          if (data.response) {
-            addMessage(data.response, 'assistant');
-            conversationHistory.push({ role: 'assistant', content: data.response });
-            await saveMessageToFirestore(message, 'user');
-            await saveMessageToFirestore(data.response, 'assistant');
-            retryCount = 0;
-          } else {
-            throw new Error('Respuesta vacía del servidor');
-          }
-        } catch (error) {
-          console.error('Error:', error);
           
-          if (retryCount < maxRetries) {
-            retryCount++;
-            typingIndicator?.remove();
-            await new Promise(r => setTimeout(r, 1000 * retryCount));
-            return attemptSend();
-          }
-          
-          typingIndicator?.remove();
-          showConnectionStatus(error.message || 'Error al enviar mensaje', 'error');
-          addMessage('Lo siento, ha ocurrido un error. Por favor, intenta nuevamente.', 'assistant');
-        } finally {
-          isProcessing = false;
-          messageInput.disabled = false;
-          sendButton.disabled = false;
-          if (!retry) messageInput.focus();
-        }
-      }
-
-      await attemptSend();
-    }
-
-    function showTypingIndicator() {
-      const messagesContainer = document.getElementById('chatMessages');
-      const typingDiv = document.createElement('div');
-      typingDiv.className = 'typing-indicator';
-      typingDiv.innerHTML = `
-        <div class="typing-dots">
-          <div class="typing-dot"></div>
-          <div class="typing-dot"></div>
-          <div class="typing-dot"></div>
-        </div>
-      `;
-      messagesContainer.appendChild(typingDiv);
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
-      return typingDiv;
-    }
-
-    async function saveMessageToFirestore(message, sender) {
-      try {
-        const user = auth.currentUser;
-        if (!user) return;
-        
-        const db = firebase.firestore();
-        await db.collection('chats').add({
-          userId: user.uid,
-          message: message,
-          sender: sender,
-          category: selectedCategory,
-          timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
-      } catch (error) {
-        console.error('Error al guardar mensaje:', error);
-      }
-    }
-
-    function addMessage(text, sender) {
-      const messagesContainer = document.getElementById('chatMessages');
-      const messageDiv = document.createElement('div');
-      messageDiv.className = `message ${sender}-message`;
-      messageDiv.innerHTML = `<div class="message-content">${text}</div>`;
-      messagesContainer.appendChild(messageDiv);
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    }
-
-    function showConnectionStatus(message, type) {
-      const existingStatus = document.querySelector('.connection-status');
-      if (existingStatus) existingStatus.remove();
-      
-      const statusDiv = document.createElement('div');
-      statusDiv.className = `connection-status ${type}`;
-      statusDiv.textContent = message;
-      document.body.appendChild(statusDiv);
-
-      setTimeout(() => {
-        statusDiv.style.animation = 'statusDisappear 0.3s forwards';
-        setTimeout(() => statusDiv.remove(), 300);
-      }, type === 'error' ? 5000 : 3000);
-    }
-
-    // Event Listeners
-    const messageInput = document.getElementById('messageInput');
-    const sendButton = document.getElementById('sendButton');
-
-    messageInput.addEventListener('input', function() {
-      this.style.height = '54px';
-      this.style.height = Math.min(this.scrollHeight, 150) + 'px';
-      sendButton.disabled = !this.value.trim();
-    });
-
-    messageInput.addEventListener('keydown', function(event) {
-      if (event.key === 'Enter' && !event.shiftKey) {
-        event.preventDefault();
-        if (!this.value.trim()) return;
-        sendMessage();
-      }
-    });
-
-    sendButton.addEventListener('click', () => sendMessage());
-
-    document.getElementById('logoutButton').addEventListener('click', async () => {
-      try {
-        await auth.signOut();
-        window.location.href = '/';
-      } catch (error) {
-        console.error("Error al cerrar sesión:", error);
-        showConnectionStatus('Error al cerrar sesión', 'error');
-      }
-    });
-
-    function redirectToWhatsApp() {
-      const phoneNumber = '+56999999999';
-      const message = encodeURIComponent('Hola, necesito ayuda legal profesional sobre problemas con deudas o bancos. ¿Podría asesorarme?');
-      window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
-    }
-
-    // Connection status events
-    window.addEventListener('online', () => {
-      showConnectionStatus('Conexión restaurada', 'success');
-    });
-    
-    window.addEventListener('offline', () => {
-      showConnectionStatus('Sin conexión', 'error');
-    });
-
-    window.addEventListener('beforeunload', (event) => {
-      if (isProcessing || messageInput.value.trim()) {
-        event.preventDefault();
-        event.returnValue = '';
-      }
-    });
-  </script>
-</body>
-</html>
