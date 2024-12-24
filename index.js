@@ -399,7 +399,7 @@ app.use((err, req, res, next) => {
 // Iniciar servidor
 const PORT = process.env.PORT || 3000;
 const server = app.listen(PORT, () => {
-  consoleconsole.log(`Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   
   // Manejo de señales de terminación
